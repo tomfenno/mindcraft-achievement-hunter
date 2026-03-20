@@ -1,4 +1,4 @@
-import { Agent } from '../agent/agent.js';
+import { Agent } from '../agent/agent_copy.js';
 import { serverProxy } from '../agent/mindserver_proxy.js';
 import yargs from 'yargs';
 
