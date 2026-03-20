@@ -430,14 +430,15 @@ export class Agent {
 
     startEvents() {
         // Custom events
+        const t = this.bot.time.timeOfDay
         this.bot.on('time', () => {
-            if (this.bot.time.timeOfDay > 0 && this.bot.time.timeOfDay < 150)
+            if (t >= 0 && t <= 25)
             this.bot.emit('sunrise');
-            else if (this.bot.time.timeOfDay == 6000)
+            else if (t >= 6000 && t <= 6025)
             this.bot.emit('noon');
-            else if (this.bot.time.timeOfDay == 12000)
+            else if (t >= 12000 && t <= 12025)
             this.bot.emit('sunset');
-            else if (this.bot.time.timeOfDay == 18000)
+            else if (t >= 18000 && t <= 18025)
             this.bot.emit('midnight');
         });
 
@@ -467,20 +468,20 @@ export class Agent {
 
         // TODO start of new code
         this.bot.on('sunrise', () => {
-            this.bot.chat("it is sunrise")
-            console.log("sunrise is happening")
+            this.bot.chat("It is sunrise")
+            console.log(`[${this.name}] It's sunrise!`);
         });
         this.bot.on('noon', () => {
-            this.bot.chat("it is noon")
-            console.log("noon is happening")
+            this.bot.chat("It is noon")
+            console.log(`[${this.name}] It's noon!`);
         });
         this.bot.on('sunset', () => {
-            this.bot.chat("it is sunset")
-            console.log("sunset is happening")
+            this.bot.chat("It is sunset")
+            console.log(`[${this.name}] It's sunset!`);
         });
         this.bot.on('midnight', () => {
             this.bot.chat("it is midnight")
-            console.log("midnight is happening")
+            console.log(`[${this.name}] It's noon!`);
         });
 
         this.bot.on('death', () => {
