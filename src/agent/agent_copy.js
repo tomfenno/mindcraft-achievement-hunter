@@ -17,6 +17,7 @@ import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
 import { speak } from './speak.js';
 import { log, validateNameFormat, handleDisconnection } from './connection_handler.js';
+import fs from 'fs';
 
 export class Agent {
     async start(load_mem=false, init_message=null, count_id=0) {
@@ -27,6 +28,11 @@ export class Agent {
         // Initialize components
         this.actions = new ActionManager(this);
         this.prompter = new Prompter(this, settings.profile);
+        const ogreProfile = JSON.parse(
+            fs.readFileSync('./profiles/ogre.json')
+        );
+
+        this.ogrePrompter = new Prompter(this, ogreProfile);
         this.name = (this.prompter.getName() || '').trim();
         console.log(`Initializing agent ${this.name}...`);
         
@@ -428,6 +434,25 @@ export class Agent {
         }
     }
 
+        async runOgreNoonBehavior() {
+        const messages = [
+            {
+                role: "system",
+                content: "You are an ogre Minecraft bot. At noon, decide one useful action to take and include the command."
+            },
+            {
+                role: "user",
+                content: "It is noon. Choose what to do next based on current state."
+            }
+        ];
+
+        const response = await this.ogrePrompter.promptConvo(messages);
+        console.log("[Ogre noon response]", response);
+
+        // feed response back into the normal agent pipeline
+        await this.handleMessage("system", response);
+    }
+
     startEvents() {
         // Custom events
         const t = this.bot.time.timeOfDay
@@ -471,9 +496,8 @@ export class Agent {
             this.bot.chat("It is sunrise")
             console.log(`[${this.name}] It's sunrise!`);
         });
-        this.bot.on('noon', () => {
-            this.bot.chat("It is noon")
-            console.log(`[${this.name}] It's noon!`);
+        this.bot.on('noon', async () => {
+            await this.runOgreNoonBehavior();
         });
         this.bot.on('sunset', () => {
             this.bot.chat("It is sunset")
