@@ -31,6 +31,10 @@ WORKDIR /app
 COPY package*.json .
 RUN npm install
 
+# Fix: 1.21.x chat packet 'checksum' field is i8 but receives unsigned byte values
+COPY patch_protocol.py .
+RUN python3 patch_protocol.py
+
 COPY . .
 
 CMD ["npm", "start"]
