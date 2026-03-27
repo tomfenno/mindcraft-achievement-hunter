@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync, readdirSync, existsSync } from 'fs';
+import path from 'path';
 import { History } from './history.js';
 import { Coder } from './coder.js';
 import { VisionInterpreter } from './vision/vision_interpreter.js';
@@ -283,8 +285,10 @@ export class Agent {
                     this.history.add(source, message);
                 }
                 let execute_res = await executeCommand(this, message);
-                if (execute_res) 
+                if (execute_res) {
                     this.routeResponse(source, execute_res);
+                    this._logCommand(user_command_name, execute_res);
+                }
                 return true;
             }
         }
@@ -527,6 +531,18 @@ export class Agent {
         return !this.actions.executing;
     }
     
+
+    _logCommand(commandName, result) {
+        const name = commandName.replace('!', '').toLowerCase();
+        const logDir = path.join('achievement_hunter', 'logs', name);
+        mkdirSync(logDir, { recursive: true });
+        const existing = existsSync(logDir) ? readdirSync(logDir) : [];
+        const nums = existing.map(f => parseInt(f.replace(name, '').replace('.json', ''))).filter(n => !isNaN(n));
+        const num = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+        const filepath = path.join(logDir, `${name}${num}.json`);
+        writeFileSync(filepath, JSON.stringify({ command: commandName, result }, null, 2));
+        console.log(`Logged to ${filepath}`);
+    }
 
     cleanKill(msg='Killing agent process...', code=1) {
         this.history.add('system', msg);
