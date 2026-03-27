@@ -1,5 +1,5 @@
 const settings = {
-  'minecraft_version': 'auto',     // or specific version like "1.21.6"
+  'minecraft_version': '1.21.6',
   'host': 'host.docker.internal',  // For docker
   //'host': '127.0.0.1',  // or "localhost", "your.ip.address.here"
   'port': 55916,      // set to -1 to automatically scan for open ports
@@ -11,7 +11,8 @@ const settings = {
 
   'base_profile': 'survival',  // survival, assistant, creative, or god_mode
   'profiles': [
-    './andy.json',
+    './profiles/human.json',
+    //'./andy.json',
     // "./profiles/gpt.json",
     // "./profiles/claude.json",
     // "./profiles/gemini.json",
