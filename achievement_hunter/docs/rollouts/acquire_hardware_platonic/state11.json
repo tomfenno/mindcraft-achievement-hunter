@@ -1,0 +1,66 @@
+{
+  "command": "!state",
+  "result": {
+    "position": {
+      "x": -102.55,
+      "y": 60,
+      "z": -32.5
+    },
+    "status": {
+      "health": "20/20",
+      "hunger": "20/20",
+      "biome": "old_growth_pine_taiga",
+      "weather": "clear",
+      "time_of_day": "afternoon",
+      "current_action": "idle"
+    },
+    "inventory": {
+      "iron_ingot": 1,
+      "furnace": 1,
+      "stone_pickaxe": 1,
+      "wooden_pickaxe": 1,
+      "cobblestone": 6,
+      "spruce_planks": 3,
+      "dirt": 10,
+      "crafting_table": 1
+    },
+    "wearing": [],
+    "craftable_items": [
+      "spruce_slab",
+      "cobblestone_slab",
+      "cobblestone_stairs",
+      "cobblestone_wall",
+      "spruce_button",
+      "spruce_pressure_plate",
+      "bowl",
+      "stick",
+      "iron_nugget"
+    ],
+    "nearby_blocks": [
+      "stone",
+      "copper_ore",
+      "iron_ore",
+      "gravel",
+      "wall_torch",
+      "water",
+      "dirt",
+      "grass_block",
+      "coal_ore",
+      "fern",
+      "granite"
+    ],
+    "relative_blocks": {
+      "below": "stone",
+      "legs": "air",
+      "head": "air",
+      "above_head_solid": "stone (0 blocks up)"
+    },
+    "nearby_entities": {
+      "human_players": [
+        "ChiefChewy"
+      ],
+      "mobs": {},
+      "bot_players": []
+    }
+  }
+}

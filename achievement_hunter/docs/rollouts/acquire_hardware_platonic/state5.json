@@ -1,0 +1,75 @@
+{
+  "command": "!state",
+  "result": {
+    "position": {
+      "x": -97.49,
+      "y": 66,
+      "z": -36.31
+    },
+    "status": {
+      "health": "20/20",
+      "hunger": "20/20",
+      "biome": "old_growth_pine_taiga",
+      "weather": "clear",
+      "time_of_day": "afternoon",
+      "current_action": "idle"
+    },
+    "inventory": {
+      "spruce_log": 1,
+      "spruce_planks": 6,
+      "stick": 4,
+      "crafting_table": 1
+    },
+    "wearing": [],
+    "craftable_items": [
+      "spruce_planks",
+      "spruce_slab",
+      "crafting_table",
+      "spruce_fence",
+      "spruce_stairs",
+      "spruce_button",
+      "spruce_pressure_plate",
+      "spruce_door",
+      "spruce_trapdoor",
+      "spruce_fence_gate",
+      "spruce_boat",
+      "bowl",
+      "wooden_sword",
+      "wooden_shovel",
+      "wooden_pickaxe",
+      "wooden_axe",
+      "wooden_hoe",
+      "stick",
+      "spruce_sign"
+    ],
+    "nearby_blocks": [
+      "grass_block",
+      "dirt",
+      "sand",
+      "fern",
+      "stone",
+      "large_fern",
+      "dead_bush",
+      "podzol",
+      "spruce_log",
+      "sandstone",
+      "spruce_leaves",
+      "gravel",
+      "copper_ore",
+      "mossy_cobblestone"
+    ],
+    "relative_blocks": {
+      "below": "grass_block",
+      "legs": "air",
+      "head": "air",
+      "above_head_solid": "spruce_leaves (4 blocks up)"
+    },
+    "nearby_entities": {
+      "human_players": [
+        "ChiefChewy"
+      ],
+      "mobs": {},
+      "bot_players": []
+    }
+  }
+}

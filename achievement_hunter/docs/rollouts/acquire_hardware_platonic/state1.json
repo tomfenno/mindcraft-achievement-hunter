@@ -1,0 +1,49 @@
+{
+  "command": "!state",
+  "result": {
+    "position": {
+      "x": -102.5,
+      "y": 67,
+      "z": -36.5
+    },
+    "status": {
+      "health": "20/20",
+      "hunger": "20/20",
+      "biome": "old_growth_pine_taiga",
+      "weather": "clear",
+      "time_of_day": "morning",
+      "current_action": "idle"
+    },
+    "inventory": {},
+    "wearing": [],
+    "craftable_items": [],
+    "nearby_blocks": [
+      "large_fern",
+      "grass_block",
+      "dirt",
+      "fern",
+      "stone",
+      "spruce_leaves",
+      "podzol",
+      "gravel",
+      "spruce_log",
+      "sand",
+      "mossy_cobblestone",
+      "copper_ore",
+      "sandstone"
+    ],
+    "relative_blocks": {
+      "below": "grass_block",
+      "legs": "large_fern",
+      "head": "large_fern",
+      "above_head_solid": null
+    },
+    "nearby_entities": {
+      "human_players": [
+        "ChiefChewy"
+      ],
+      "mobs": {},
+      "bot_players": []
+    }
+  }
+}
