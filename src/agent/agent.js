@@ -540,7 +540,9 @@ export class Agent {
         const nums = existing.map(f => parseInt(f.replace(name, '').replace('.json', ''))).filter(n => !isNaN(n));
         const num = nums.length > 0 ? Math.max(...nums) + 1 : 1;
         const filepath = path.join(logDir, `${name}${num}.json`);
-        writeFileSync(filepath, JSON.stringify({ command: commandName, result }, null, 2));
+        let logResult = result;
+        try { logResult = JSON.parse(result.trim()); } catch (_) {}
+        writeFileSync(filepath, JSON.stringify({ command: commandName, result: logResult }, null, 2));
         console.log(`Logged to ${filepath}`);
     }
 
