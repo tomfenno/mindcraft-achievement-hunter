@@ -519,7 +519,8 @@ export class Agent {
 
     async update(delta) {
         await this.bot.modes.update();
-        this.self_prompter.update(delta);
+        this.self_prompter.update(delta); // Modify here (comment this out and uncomment below) 
+        // this.refine_loop.update(delta);
         await this.checkTaskDone();
     }
 
