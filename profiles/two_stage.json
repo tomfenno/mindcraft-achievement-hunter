@@ -1,0 +1,9 @@
+{
+    "name": "Falcone",
+
+    "model": "gpt-5",
+    
+    "planner_model": "gpt-5.4",
+
+    "selector_model": "gpt-5-nano"
+}

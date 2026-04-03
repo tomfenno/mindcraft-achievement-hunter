@@ -11,7 +11,8 @@ const settings = {
     "base_profile": "assistant", // survival, assistant, creative, or god_mode
     "profiles": [
         // "./profiles/ogre.json",
-        "./andy.json",
+        "./profiles/two_stage.json",
+        // "./andy.json",
         // "./profiles/gpt.json",
         // "./profiles/claude.json",
         // "./profiles/gemini.json",
