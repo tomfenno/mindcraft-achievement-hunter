@@ -17,6 +17,9 @@ import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
 import { speak } from './speak.js';
 import { log, validateNameFormat, handleDisconnection } from './connection_handler.js';
+import { AgenticPlanner } from './refinement_loop.js'; //Newly added
+import { SelfPrompter } from './self_prompter.js';
+import { AgenticPlanner } from './refinement_loop.js'; // Your SPL logic
 
 export class Agent {
     async start(load_mem=false, init_message=null, count_id=0) {
@@ -44,6 +47,7 @@ export class Agent {
         this.npc = new NPCContoller(this);
         this.memory_bank = new MemoryBank();
         this.self_prompter = new SelfPrompter(this);
+        this.refinement_loop = new AgenticPlanner(this);
         convoManager.initAgent(this);
         await this.prompter.initExamples();
 
@@ -361,6 +365,12 @@ export class Agent {
 
                 let execute_res = await executeCommand(this, res);
 
+                this.bot.i
+                // Uncomment below for refinement_loop
+                // if (this.refinement_loop.isActive()) {
+                //     await this.refinement_loop.evaluateActionResult(command_name, execute_res, this.bot.inventory);
+                // }
+
                 console.log('Agent executed:', command_name, 'and got:', execute_res);
                 used_command = true;
 
@@ -518,11 +528,15 @@ export class Agent {
     }
 
     async update(delta) {
-        await this.bot.modes.update();
-        this.self_prompter.update(delta); // Modify here (comment this out and uncomment below) 
-        // this.refine_loop.update(delta);
-        await this.checkTaskDone();
+    // If your SPL planner is active, let it handle the logic
+    if (this.planner.isActive()) {
+        await this.planner.update(delta);
+        return; // Skip the baseline self_prompter
     }
+
+    // Otherwise, fall back to the baseline (for the control group experiments)
+    this.self_prompter.update(delta);
+    }   
 
     isIdle() {
         return !this.actions.executing;

@@ -2,97 +2,86 @@ export class AgenticPlanner {
     constructor(agent) {
         this.agent = agent;
         this.active = true;
-        this.state = 'IDLE'; // States: IDLE, PLANNING, EXECUTING, REFINING
-        this.currentTargetNode = null;
-        this.lastCommand = null;
-        this.retryCount = 0;
-        this.MAX_RETRIES = 3; // Crucial to prevent infinite failure loops
+        this.state = 'IDLE'; 
+        this.primaryTaskDAG = null;
     }
 
-    isActive() {
-        return this.active;
-    }
+    isActive() { return this.active; }
 
-    // Called on every tick by agent.js
     async update(delta) {
         if (!this.active || this.state !== 'IDLE') return;
-
-        // If the bot is physically idle, start the planning phase
         if (this.agent.isIdle()) {
             this.state = 'PLANNING';
             await this.planNextAction();
         }
     }
 
+    // Implementation of Algorithm 2: Structured Prompting Loop
     async planNextAction() {
-        console.log("Refinement Loop: Planning next action via SCSE...");
-        
-        // 1. Gather State (Inventory, nearby blocks from Vision/Memory)
-        const inventoryState = this.getInventoryState();
-        const dagState = this.agent.memory_bank.getDAGState();
+        const inventory = this.getInventoryState();
 
-        // 2. Query SCSE LLM
-        // (You will need to implement promptSCSE in prompter.js)
-        const targetNode = await this.agent.prompter.promptSCSE(dagState, inventoryState);
-        this.currentTargetNode = targetNode;
-
-        // 3. Query Execution LLM to translate Node -> Command
-        const command = await this.agent.prompter.promptExecution(targetNode);
-        this.lastCommand = command;
-
-        // 4. Execute the command
-        this.state = 'EXECUTING';
-        this.agent.handleMessage('system', command); 
-        // Note: agent.js will catch the result and call evaluateActionResult()
-    }
-
-    // This is the hook we added to agent.js in the previous step
-    async evaluateActionResult(command, result) {
-        if (this.state !== 'EXECUTING') return;
-
-        // Determine if result is a success or failure (pseudo-logic)
-        const isSuccess = !result.toLowerCase().includes("error") && !result.toLowerCase().includes("failed");
-
-        if (isSuccess) {
-            console.log("Action Succeeded. Updating DAG.");
-            this.agent.memory_bank.markNodeComplete(this.currentTargetNode);
-            this.retryCount = 0;
-            this.state = 'IDLE'; // Ready for next node
-        } else {
-            console.log(`Action Failed: ${result}. Initiating Refinement.`);
-            this.state = 'REFINING';
-            await this.refineAction(result);
+        // 1. Task Decomposition & Self-Refinement (PTD)
+        if (!this.primaryTaskDAG) {
+            const initialPtdPrompt = `Generate a JSON DAG for the task: ${this.agent.current_goal}`;
+            this.primaryTaskDAG = await this.selfRefineLoop(
+                initialPtdPrompt, 
+                (r) => `Critique this Minecraft DAG for missing dependencies: ${r}`,
+                (f, r) => `Rewrite the DAG JSON based on this critique: ${f}. Original: ${r}`
+            );
         }
-    }
 
-    async refineAction(errorMessage) {
-        this.retryCount++;
-        if (this.retryCount > this.MAX_RETRIES) {
-            console.warn("Max retries hit. Escalating failure to QSP/DAG.");
-            // Logic to mark node as temporarily unachievable and repick a new node
-            this.agent.memory_bank.markNodeBlocked(this.currentTargetNode);
-            this.retryCount = 0;
-            this.state = 'IDLE';
+        // 2. Algorithm 1: State-Conditioned Subgraph
+        const activeSubgraph = this.getConditionedSubgraph(this.primaryTaskDAG, inventory);
+        
+        if (activeSubgraph.nodes.length === 0) {
+            this.agent.openChat("Primary task successfully completed.");
+            this.active = false;
             return;
         }
 
-        // 1. Query Refiner LLM
-        const currentState = this.getInventoryState();
-        const refinedCommand = await this.agent.prompter.promptRefiner(
-            this.lastCommand, 
-            errorMessage, 
-            currentState
+        // 3. SCSE with Self-Refinement
+        const scsePrompt = `Given this inventory ${JSON.stringify(inventory)}, which node should I do next? ${JSON.stringify(activeSubgraph)}`;
+        const targetNode = await this.selfRefineLoop(
+            scsePrompt,
+            (r) => `Is ${r} actually achievable now? Check dependencies.`,
+            (f, r) => `Re-select the best node. Critique: ${f}`
         );
 
-        // 2. Retry with new command
-        this.lastCommand = refinedCommand;
+        // 4. Finite Horizon Planning (FHP) -> Action
+        const command = await this.agent.handleMessage('system', `Output ONLY a !command for: ${targetNode}`, -1);
+
         this.state = 'EXECUTING';
-        this.agent.handleMessage('system', refinedCommand);
+        // The command execution happens via the agent's standard message handler
+    }
+
+    // This is the core logic from your "Self-Refine LLM" pseudocode
+    async selfRefineLoop(pInit, pCritiqueFn, pRefineFn, n = 3) {
+        let r = await this.agent.handleMessage('system', pInit, -1);
+        
+        for (let i = 0; i < n; i++) {
+            let feedback = await this.agent.handleMessage('system', pCritiqueFn(r), -1);
+            
+            // Check if refinement is sufficient
+            if (feedback.toLowerCase().includes("acceptable") || feedback.toLowerCase().includes("no changes")) {
+                return r;
+            }
+
+            r = await this.agent.handleMessage('system', pRefineFn(feedback, r), -1);
+        }
+        return r;
+    }
+
+    getConditionedSubgraph(dag, inventory) {
+        // Implementation of your Algorithm 1 logic
+        let subgraph = JSON.parse(JSON.stringify(dag));
+        const satisfied = new Set(inventory.filter(i => i.count > 0).map(i => i.name));
+        
+        subgraph.nodes = subgraph.nodes.filter(n => !satisfied.has(n.item_name));
+        return subgraph;
     }
 
     getInventoryState() {
-        if (!this.agent.bot.inventory) return "[]";
-        const items = this.agent.bot.inventory.items();
-        return JSON.stringify(items.map(i => ({name: i.name, count: i.count})));
+        if (!this.agent.bot.inventory) return [];
+        return this.agent.bot.inventory.items().map(i => ({name: i.name, count: i.count}));
     }
 }
