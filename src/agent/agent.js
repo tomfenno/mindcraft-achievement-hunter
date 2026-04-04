@@ -542,7 +542,7 @@ export class Agent {
         const filepath = path.join(logDir, `${name}${num}.json`);
         let logResult = result;
         try { logResult = JSON.parse(result.trim()); } catch (_) {}
-        writeFileSync(filepath, JSON.stringify({ command: commandName, result: logResult }, null, 2));
+        writeFileSync(filepath, JSON.stringify(logResult, null, 2));
         console.log(`Logged to ${filepath}`);
     }
 

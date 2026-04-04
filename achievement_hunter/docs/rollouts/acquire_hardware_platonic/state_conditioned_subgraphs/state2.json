@@ -1,0 +1,171 @@
+{
+  "objective": "smelt an iron ingot",
+  "sink": ["iron_ingot"],
+  "nodes": [
+    {
+      "id": "any_overworld_planks",
+      "qty": 12,
+      "type": "crafted_item"
+    },
+    {
+      "id": "crafting_table",
+      "qty": 1,
+      "type": "workstation"
+    },
+    {
+      "id": "stick",
+      "qty": 4,
+      "type": "crafted_item"
+    },
+    {
+      "id": "wooden_pickaxe",
+      "qty": 1,
+      "type": "tool"
+    },
+    {
+      "id": "cobblestone",
+      "qty": 11,
+      "type": "raw_resource"
+    },
+    {
+      "id": "stone_pickaxe",
+      "qty": 1,
+      "type": "tool"
+    },
+    {
+      "id": "furnace",
+      "qty": 1,
+      "type": "workstation"
+    },
+    {
+      "id": "raw_iron",
+      "qty": 1,
+      "type": "raw_resource"
+    },
+    {
+      "id": "iron_ingot",
+      "qty": 1,
+      "type": "smelted_item"
+    }
+  ],
+  "edges": [
+    {
+      "from": "any_overworld_planks",
+      "to": "crafting_table",
+      "type": "crafting_input",
+      "qty": 4,
+      "consumed": true
+    },
+    {
+      "from": "any_overworld_planks",
+      "to": "stick",
+      "type": "crafting_input",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "any_overworld_planks",
+      "to": "wooden_pickaxe",
+      "type": "crafting_input",
+      "qty": 3,
+      "consumed": true
+    },
+    {
+      "from": "stick",
+      "to": "wooden_pickaxe",
+      "type": "crafting_input",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "wooden_pickaxe",
+      "type": "workstation_required",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "wooden_pickaxe",
+      "to": "cobblestone",
+      "type": "tool_required",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "cobblestone",
+      "to": "stone_pickaxe",
+      "type": "crafting_input",
+      "qty": 3,
+      "consumed": true
+    },
+    {
+      "from": "stick",
+      "to": "stone_pickaxe",
+      "type": "crafting_input",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "stone_pickaxe",
+      "type": "workstation_required",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "cobblestone",
+      "to": "furnace",
+      "type": "crafting_input",
+      "qty": 8,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "furnace",
+      "type": "workstation_required",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "stone_pickaxe",
+      "to": "raw_iron",
+      "type": "tool_required",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "raw_iron",
+      "to": "iron_ingot",
+      "type": "smelting_input",
+      "qty": 1,
+      "consumed": true
+    },
+    {
+      "from": "any_overworld_planks",
+      "to": "iron_ingot",
+      "type": "fuel_input",
+      "qty": 1,
+      "consumed": true
+    },
+    {
+      "from": "furnace",
+      "to": "iron_ingot",
+      "type": "workstation_required",
+      "qty": 1,
+      "consumed": false
+    }
+  ],
+  "assumptions": {
+    "start_state": "fresh survival start",
+    "allow_loot": false,
+    "allow_trading": false,
+    "allow_structures": false,
+    "allow_rng_shortcuts": false,
+    "optimization_goal": "minimum total required resources",
+    "notes": [
+      "raw_iron represents the mined drop obtained from an iron ore block; the ore block itself is not modeled because nodes must be inventory items only.",
+      "a single plank is used as furnace fuel for one smelt; nether planks are excluded from the abstract fuel/crafting set because they cannot be used as furnace fuel.",
+      "all 3x3 crafting recipes require the crafting_table; 2x2 inventory crafting is used for planks and sticks."
+    ]
+  }
+}

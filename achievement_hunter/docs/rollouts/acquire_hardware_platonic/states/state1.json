@@ -1,0 +1,38 @@
+{
+  "position": {
+    "x": -85.5,
+    "y": 64,
+    "z": -56.5
+  },
+  "status": {
+    "health": "20/20",
+    "hunger": "20/20",
+    "biome": "beach",
+    "weather": "clear",
+    "time_of_day": "morning",
+    "current_action": "idle"
+  },
+  "inventory": {},
+  "wearing": [],
+  "craftable_items": [],
+  "nearby_blocks": [
+    "sand",
+    "sandstone",
+    "stone",
+    "andesite",
+    "dirt"
+  ],
+  "relative_blocks": {
+    "below": "sand",
+    "legs": "air",
+    "head": "air",
+    "above_head_solid": null
+  },
+  "nearby_entities": {
+    "human_players": [
+      "ChiefChewy"
+    ],
+    "mobs": {},
+    "bot_players": []
+  }
+}

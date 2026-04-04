@@ -1,0 +1,13 @@
+{
+  "inventory": {
+    "furnace": 1,
+    "spruce_log": 1,
+    "stone_pickaxe": 1,
+    "wooden_pickaxe": 1,
+    "cobblestone": 1,
+    "spruce_planks": 3,
+    "dirt": 7,
+    "crafting_table": 1
+  },
+  "wearing": "Nothing"
+}

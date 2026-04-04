@@ -449,6 +449,38 @@ export const queryList = [
     }
   },
   {
+    name: '!inventoryState',
+    description: 'Get the bot\'s inventory and worn equipment formatted as a structured JSON object.',
+    perform: function(agent) {
+      const bot = agent.bot;
+      const rawCounts = world.getInventoryCounts(bot);
+      const inventoryCounts = {};
+      for (const [item, count] of Object.entries(rawCounts)) {
+        if (count > 0) inventoryCounts[item] = count;
+      }
+
+      const helmet = bot.inventory.slots[5];
+      const chestplate = bot.inventory.slots[6];
+      const leggings = bot.inventory.slots[7];
+      const boots = bot.inventory.slots[8];
+
+      const wearing = {};
+      if (helmet) wearing['Head'] = helmet.name;
+      if (chestplate) wearing['Torso'] = chestplate.name;
+      if (leggings) wearing['Legs'] = leggings.name;
+      if (boots) wearing['Feet'] = boots.name;
+
+      const inventoryField = Object.keys(inventoryCounts).length > 0 ? inventoryCounts : {};
+      inventoryField.wearing = Object.keys(wearing).length > 0 ? wearing : 'Nothing';
+
+      const state = {
+        inventory: inventoryField,
+      };
+
+      return JSON.stringify(state, null, 2);
+    }
+  },
+  {
     name: '!help',
     description: 'Lists all available commands and their descriptions.',
     perform: async function(agent) {

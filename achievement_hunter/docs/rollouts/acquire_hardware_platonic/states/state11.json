@@ -1,0 +1,71 @@
+{
+  "position": {
+    "x": -100.7,
+    "y": 48,
+    "z": -47.47
+  },
+  "status": {
+    "health": "20/20",
+    "hunger": "20/20",
+    "biome": "old_growth_pine_taiga",
+    "weather": "clear",
+    "time_of_day": "night",
+    "current_action": "idle"
+  },
+  "inventory": {
+    "raw_iron": 1,
+    "furnace": 1,
+    "spruce_log": 1,
+    "stone_pickaxe": 1,
+    "wooden_pickaxe": 1,
+    "cobblestone": 12,
+    "spruce_planks": 3,
+    "dirt": 7,
+    "crafting_table": 1,
+    "granite": 2,
+    "diorite": 9
+  },
+  "wearing": [],
+  "craftable_items": [
+    "polished_diorite",
+    "andesite",
+    "spruce_planks",
+    "spruce_slab",
+    "cobblestone_slab",
+    "furnace",
+    "cobblestone_stairs",
+    "cobblestone_wall",
+    "diorite_wall",
+    "diorite_stairs",
+    "diorite_slab",
+    "spruce_button",
+    "spruce_pressure_plate",
+    "bowl",
+    "stick"
+  ],
+  "nearby_blocks": [
+    "diorite",
+    "iron_ore",
+    "stone",
+    "dirt",
+    "coal_ore",
+    "copper_ore",
+    "granite",
+    "wall_torch"
+  ],
+  "relative_blocks": {
+    "below": "diorite",
+    "legs": "air",
+    "head": "air",
+    "above_head_solid": "diorite (0 blocks up)"
+  },
+  "nearby_entities": {
+    "human_players": [
+      "ChiefChewy"
+    ],
+    "mobs": {
+      "bat": 5
+    },
+    "bot_players": []
+  }
+}
