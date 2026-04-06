@@ -464,17 +464,12 @@ export const queryList = [
       const leggings = bot.inventory.slots[7];
       const boots = bot.inventory.slots[8];
 
-      const wearing = {};
-      if (helmet) wearing['Head'] = helmet.name;
-      if (chestplate) wearing['Torso'] = chestplate.name;
-      if (leggings) wearing['Legs'] = leggings.name;
-      if (boots) wearing['Feet'] = boots.name;
-
-      const inventoryField = Object.keys(inventoryCounts).length > 0 ? inventoryCounts : {};
-      inventoryField.wearing = Object.keys(wearing).length > 0 ? wearing : 'Nothing';
+      for (const item of [helmet, chestplate, leggings, boots]) {
+        if (item) inventoryCounts[item.name] = (inventoryCounts[item.name] || 0) + 1;
+      }
 
       const state = {
-        inventory: inventoryField,
+        inventory: Object.keys(inventoryCounts).length > 0 ? inventoryCounts : 'Nothing',
       };
 
       return JSON.stringify(state, null, 2);
