@@ -91,6 +91,45 @@ const prompt = fill_ptd_refinement_prompt('Craft a stone pickaxe', graph_obj, va
 
 ---
 
+### `enrich_subgraph(subgraph, original_graph)`
+Restores the fields stripped by `trim_graph_for_scsg` back onto a pruned subgraph, using the original PTD graph as the source of truth. Also adds a `satisfied_inputs` array to each vertex listing any dependencies that were pruned (already satisfied by the bot's current state). Matches vertices by `id` and edges by `(from, to, consumed)`. Warns if a match is not found.
+
+**Parameters**
+- `subgraph` — trimmed/pruned subgraph (e.g. scsg output)
+- `original_graph` — the original full PTD graph
+
+**Returns** — enriched JS object with full vertex and edge fields restored, plus `satisfied_inputs` on each vertex:
+
+```json
+{
+  "objective": "<string>",
+  "sinks": ["<vertex_id>"],
+  "vertices": [
+    {
+      "id": "<string>",
+      "qty": "<int>",
+      "item_type": "<string>",
+      "acquisition_dependency": "<string>",
+      "satisfied_inputs": [
+        { "from": "<string>", "type": "<string>", "qty": "<int>", "consumed": "<bool>" }
+      ]
+    }
+  ],
+  "edges": [{ "from": "<string>", "to": "<string>", "qty": "<int>", "consumed": "<bool>", "type": "<string>" }]
+}
+```
+
+`satisfied_inputs` lists the edges from the original PTD graph that pointed to this vertex but whose `from` vertex was pruned (already satisfied by the bot's current state). Empty array if none.
+
+**Example**
+```js
+const trimmed = trim_graph_for_scsg(ptd_graph);
+// ... run scsg to get subgraph ...
+const enriched = enrich_subgraph(subgraph, ptd_graph);
+```
+
+---
+
 ### `trim_graph_for_scsg(graph)`
 Trims a PTD graph down to only the fields required by the scsg prompt, reducing token usage. Strips `item_type` and `acquisition_dependency` from vertices, and `type` from edges.
 

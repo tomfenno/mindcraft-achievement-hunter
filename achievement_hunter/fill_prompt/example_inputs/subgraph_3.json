@@ -1,0 +1,20 @@
+{
+  "objective": "Smelt an iron ingot",
+  "sinks": ["iron_ingot"],
+  "vertices": [
+    { "id": "iron_ingot", "qty": 1 },
+    { "id": "raw_iron", "qty": 1 },
+    { "id": "furnace", "qty": 1 },
+    { "id": "stone_pickaxe", "qty": 1 },
+    { "id": "cobblestone", "qty": 11 },
+    { "id": "stick", "qty": 2 }
+  ],
+  "edges": [
+    { "from": "raw_iron", "to": "iron_ingot", "qty": 1, "consumed": true },
+    { "from": "furnace", "to": "iron_ingot", "qty": 1, "consumed": false },
+    { "from": "stone_pickaxe", "to": "raw_iron", "qty": 1, "consumed": false },
+    { "from": "cobblestone", "to": "furnace", "qty": 8, "consumed": true },
+    { "from": "cobblestone", "to": "stone_pickaxe", "qty": 3, "consumed": true },
+    { "from": "stick", "to": "stone_pickaxe", "qty": 2, "consumed": true }
+  ]
+}

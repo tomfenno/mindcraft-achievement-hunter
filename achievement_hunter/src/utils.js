@@ -120,6 +120,58 @@ export function fill_ptd_refinement_prompt(
 }
 
 /**
+ * Enriches a pruned scsg subgraph using the original full PTD graph:
+ *   - Restores item_type and acquisition_dependency to each vertex
+ *   - Restores type to each edge
+ *   - Adds satisfied_inputs to each vertex: a list of edges from the original
+ *     graph that pointed TO that vertex but whose from-vertex was pruned
+ *     (already satisfied by the bot's current state)
+ *
+ * Example:
+ *   const trimmed = trim_graph_for_scsg(ptd_graph);
+ *   // ... run scsg to get subgraph ...
+ *   const enriched = enrich_subgraph(subgraph, ptd_graph);
+ *   // each vertex now has satisfied_inputs: [{ from, type, qty, consumed }]
+ */
+export function enrich_subgraph(subgraph, original_graph) {
+  const vertex_map = new Map(original_graph.vertices.map(v => [v.id, v]));
+  const edge_map = new Map(
+    original_graph.edges.map(e => [`${e.from}->${e.to}:${e.consumed}`, e])
+  );
+  const subgraph_ids = new Set(subgraph.vertices.map(v => v.id));
+
+  const vertices = subgraph.vertices.map(v => {
+    const original = vertex_map.get(v.id);
+    if (!original) {
+      console.warn(`enrich_subgraph: no original vertex found for id "${v.id}"`);
+      return v;
+    }
+
+    const satisfied_inputs = original_graph.edges
+      .filter(e => e.to === v.id && !subgraph_ids.has(e.from))
+      .map(e => ({ from: e.from, type: e.type, qty: e.qty, consumed: e.consumed }));
+
+    return {
+      ...v,
+      item_type: original.item_type,
+      acquisition_dependency: original.acquisition_dependency,
+      satisfied_inputs,
+    };
+  });
+
+  const edges = subgraph.edges.map(e => {
+    const original = edge_map.get(`${e.from}->${e.to}:${e.consumed}`);
+    if (!original) {
+      console.warn(`enrich_subgraph: no original edge found for (${e.from} -> ${e.to}, consumed=${e.consumed})`);
+      return e;
+    }
+    return { ...e, type: original.type };
+  });
+
+  return { ...subgraph, vertices, edges };
+}
+
+/**
  * Trims a PTD graph down to only the fields required by the scsg prompt,
  * reducing token usage. Keeps objective, sinks, vertex {id, qty}, and
  * edge {from, to, qty, consumed}.

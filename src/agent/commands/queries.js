@@ -6,7 +6,7 @@ import convoManager from '../conversation.js';
 import * as world from '../library/world.js';
 import {checkBlueprint, checkLevelBlueprint} from '../tasks/construction_tasks.js';
 import { getFullState } from '../library/full_state.js';
-import { save_json, fill_ptd_prompt, fill_ptd_feedback_prompt, fill_ptd_refinement_prompt, fill_scsg_prompt, fill_scsg_feedback_prompt, fill_scsg_refiner_prompt, trim_graph_for_scsg } from '../../../achievement_hunter/src/utils.js';
+import { save_json, fill_ptd_prompt, fill_ptd_feedback_prompt, fill_ptd_refinement_prompt, fill_scsg_prompt, fill_scsg_feedback_prompt, fill_scsg_refiner_prompt, trim_graph_for_scsg, enrich_subgraph } from '../../../achievement_hunter/src/utils.js';
 
 import {getCommandDocs} from './index.js';
 
@@ -519,6 +519,23 @@ export const queryList = [
       const result = fill_ptd_refinement_prompt(objective, candidate_graph, validator_output);
       writeFileSync('achievement_hunter/fill_prompt/outputs/ptd_refinement_prompt.md', result, 'utf8');
       return '!testFillPtdRefinementPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/ptd_refinement_prompt.md';
+    }
+  },
+  {
+    name: '!testEnrichSubgraph',
+    description: 'Test: enriches 3 example pruned subgraphs against candidate_graph.json and saves outputs.',
+    perform: function(_agent) {
+      const input_dir = 'achievement_hunter/fill_prompt/example_inputs';
+      const output_dir = 'achievement_hunter/fill_prompt/outputs';
+      const original = JSON.parse(readFileSync(`${input_dir}/candidate_graph.json`, 'utf8'));
+
+      for (let i = 1; i <= 3; i++) {
+        const subgraph = JSON.parse(readFileSync(`${input_dir}/subgraph_${i}.json`, 'utf8'));
+        const enriched = enrich_subgraph(subgraph, original);
+        writeFileSync(`${output_dir}/enriched_subgraph_${i}.json`, JSON.stringify(enriched, null, 2), 'utf8');
+      }
+
+      return '!testEnrichSubgraph succeeded: outputs saved to achievement_hunter/fill_prompt/outputs/enriched_subgraph_1-3.json';
     }
   },
   {

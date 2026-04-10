@@ -1,0 +1,171 @@
+{
+  "objective": "Smelt an iron ingot",
+  "sinks": [
+    "iron_ingot"
+  ],
+  "vertices": [
+    {
+      "id": "iron_ingot",
+      "qty": 1,
+      "item_type": "item",
+      "acquisition_dependency": "none",
+      "satisfied_inputs": [
+        {
+          "from": "any_plank",
+          "type": "fuel_input",
+          "qty": 1,
+          "consumed": true
+        }
+      ]
+    },
+    {
+      "id": "raw_iron",
+      "qty": 1,
+      "item_type": "resource",
+      "acquisition_dependency": "none",
+      "satisfied_inputs": []
+    },
+    {
+      "id": "furnace",
+      "qty": 1,
+      "item_type": "workstation",
+      "acquisition_dependency": "none",
+      "satisfied_inputs": []
+    },
+    {
+      "id": "stone_pickaxe",
+      "qty": 1,
+      "item_type": "tool",
+      "acquisition_dependency": "none",
+      "satisfied_inputs": []
+    },
+    {
+      "id": "cobblestone",
+      "qty": 11,
+      "item_type": "resource",
+      "acquisition_dependency": "none",
+      "satisfied_inputs": []
+    },
+    {
+      "id": "wooden_pickaxe",
+      "qty": 1,
+      "item_type": "tool",
+      "acquisition_dependency": "none",
+      "satisfied_inputs": [
+        {
+          "from": "any_plank",
+          "type": "crafting_input",
+          "qty": 3,
+          "consumed": true
+        }
+      ]
+    },
+    {
+      "id": "crafting_table",
+      "qty": 1,
+      "item_type": "workstation",
+      "acquisition_dependency": "none",
+      "satisfied_inputs": [
+        {
+          "from": "any_plank",
+          "type": "crafting_input",
+          "qty": 4,
+          "consumed": true
+        }
+      ]
+    },
+    {
+      "id": "stick",
+      "qty": 4,
+      "item_type": "item",
+      "acquisition_dependency": "none",
+      "satisfied_inputs": [
+        {
+          "from": "any_plank",
+          "type": "crafting_input",
+          "qty": 2,
+          "consumed": true
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "raw_iron",
+      "to": "iron_ingot",
+      "qty": 1,
+      "consumed": true,
+      "type": "smelting_input"
+    },
+    {
+      "from": "furnace",
+      "to": "iron_ingot",
+      "qty": 1,
+      "consumed": false,
+      "type": "workstation_dependency"
+    },
+    {
+      "from": "stone_pickaxe",
+      "to": "raw_iron",
+      "qty": 1,
+      "consumed": false,
+      "type": "tool_dependency"
+    },
+    {
+      "from": "cobblestone",
+      "to": "furnace",
+      "qty": 8,
+      "consumed": true,
+      "type": "crafting_input"
+    },
+    {
+      "from": "crafting_table",
+      "to": "furnace",
+      "qty": 1,
+      "consumed": false,
+      "type": "workstation_dependency"
+    },
+    {
+      "from": "cobblestone",
+      "to": "stone_pickaxe",
+      "qty": 3,
+      "consumed": true,
+      "type": "crafting_input"
+    },
+    {
+      "from": "stick",
+      "to": "stone_pickaxe",
+      "qty": 2,
+      "consumed": true,
+      "type": "crafting_input"
+    },
+    {
+      "from": "crafting_table",
+      "to": "stone_pickaxe",
+      "qty": 1,
+      "consumed": false,
+      "type": "workstation_dependency"
+    },
+    {
+      "from": "wooden_pickaxe",
+      "to": "cobblestone",
+      "qty": 1,
+      "consumed": false,
+      "type": "tool_dependency"
+    },
+    {
+      "from": "stick",
+      "to": "wooden_pickaxe",
+      "qty": 2,
+      "consumed": true,
+      "type": "crafting_input"
+    },
+    {
+      "from": "crafting_table",
+      "to": "wooden_pickaxe",
+      "qty": 1,
+      "consumed": false,
+      "type": "workstation_dependency"
+    }
+  ]
+}
