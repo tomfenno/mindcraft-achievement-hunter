@@ -1,5 +1,5 @@
 ## Objective
-`O = "{INSERT OBJECTIVE}"`
+`O = "{{OBJECTIVE}}"`
 
 ---
 
