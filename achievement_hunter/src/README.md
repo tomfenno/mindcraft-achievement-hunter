@@ -207,6 +207,22 @@ const prompt = fill_scsg_refiner_prompt(task_prompt, previous_candidate_obj, aud
 
 ---
 
+### `fill_action_mediator_prompt(task, state)`
+Fills the `action_mediator` prompt template with a task object and a state object. Returns the filled prompt string.
+
+**Parameters**
+- `task` — JS object (task output from the next task selector LLM)
+- `state` — JS object (bot state, e.g. from `get_state`)
+
+**Returns** — filled prompt string
+
+**Example**
+```js
+const prompt = fill_action_mediator_prompt(task_obj, state_obj);
+```
+
+---
+
 ### `fill_next_task_selector_prompt(enriched_subgraph, state)`
 Fills the `next_task_selector` prompt template with an enriched subgraph object and a state object. Returns the filled prompt string.
 

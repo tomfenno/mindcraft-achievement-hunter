@@ -1,0 +1,12 @@
+{
+  "target_item": "stick",
+  "qty": 2,
+  "action_type": "craft",
+  "parameters": {
+    "crafting_inputs": [
+      { "item": "any_plank", "qty": 2 }
+    ],
+    "workstation": null
+  },
+  "rationale": "stick is a source node with no incoming edges; it appears in craftable_items and its crafting input any_plank is satisfied by spruce_planks in inventory."
+}

@@ -232,6 +232,18 @@ export function fill_task_prompt(enriched_subgraph, state) {
 }
 
 /**
+ * Fills the action_mediator prompt template with a task object and a
+ * state object. Returns the filled prompt string.
+ *
+ * Example:
+ *   const prompt = fill_action_mediator_prompt(task_obj, state_obj);
+ */
+export function fill_action_mediator_prompt(task, state) {
+  const template = _read_template('../docs/prompts/action_mediator_prompts/action_mediator.md');
+  return _fill(template, {'TASK': task, 'STATE': state});
+}
+
+/**
  * Fills the next_task_selector prompt template with an enriched subgraph
  * object and a state object. Returns the filled prompt string.
  *
