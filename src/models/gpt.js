@@ -114,6 +114,80 @@ export class GPT {
         return embedding.data[0].embedding;
     }
 
+    // /**
+    //  * Implements the Self-Refine LLM algorithm
+    //  * @param {Array} turns - The conversation history
+    //  * @param {string} systemMessage - The core instructions
+    //  * @param {Object} refinementPrompts - { critique: (r) => string, refine: (f, r) => string }
+    //  * @param {number} n - Max refinement rounds
+    //  */
+    // async sendRefinedRequest(turns, systemMessage, refinementPrompts, n = 3) {
+    //     // 1. Initial Generation
+    //     let r = await this.sendRequest(turns, systemMessage);
+        
+    //     for (let i = 0; i < n; i++) {
+    //         // 2. Feedback/Critique Phase
+    //         const feedbackPrompt = refinementPrompts.critique(r);
+    //         const feedbackTurns = [...turns, { role: 'assistant', content: r }, { role: 'user', content: feedbackPrompt }];
+            
+    //         let feedback = await this.sendRequest(feedbackTurns, systemMessage);
+
+    //         // Check if refinement is sufficient
+    //         if (feedback.toLowerCase().includes("acceptable") || feedback.toLowerCase().includes("no changes")) {
+    //             console.log(`Refinement complete after ${i} rounds.`);
+    //             return r;
+    //         }
+
+    //         // 3. Refinement Phase
+    //         const refinePrompt = refinementPrompts.refine(feedback, r);
+    //         const refineTurns = [...feedbackTurns, { role: 'assistant', content: feedback }, { role: 'user', content: refinePrompt }];
+            
+    //         r = await this.sendRequest(refineTurns, systemMessage);
+    //     }
+        
+    //     return r;
+    // }
+
+    /**
+     * Implements the Self-Refine LLM algorithm with Transcript Logging
+     */
+    async sendRefinedRequest(turns, systemMessage, refinementPrompts, n = 3) {
+        let transcript = []; // Array to hold the logs
+        
+        console.log("Generating initial response...");
+        let r = await this.sendRequest(turns, systemMessage);
+        transcript.push({ stage: 'Initial Generation', content: r });
+        
+        for (let i = 0; i < n; i++) {
+            console.log(`Starting Critique Round ${i + 1}...`);
+            
+            // 1. Critique Phase
+            const feedbackPrompt = refinementPrompts.critique(r);
+            const feedbackTurns = [...turns, { role: 'assistant', content: r }, { role: 'user', content: feedbackPrompt }];
+            let feedback = await this.sendRequest(feedbackTurns, systemMessage);
+            
+            transcript.push({ stage: `Critique Round ${i + 1}`, content: feedback });
+
+            // Check for pass condition. DogNamedMud's validator outputs {"verdict": "pass"}
+            if (feedback.toLowerCase().includes('"verdict":"pass"') || feedback.toLowerCase().includes('"verdict": "pass"')) {
+                console.log(`Refinement passed after ${i} rounds.`);
+                return { finalResult: r, transcript: transcript, totalRounds: i };
+            }
+
+            console.log(`Errors found. Starting Refinement Round ${i + 1}...`);
+            
+            // 2. Refinement Phase
+            const refinePrompt = refinementPrompts.refine(feedback, r);
+            const refineTurns = [...feedbackTurns, { role: 'assistant', content: feedback }, { role: 'user', content: refinePrompt }];
+            r = await this.sendRequest(refineTurns, systemMessage);
+            
+            transcript.push({ stage: `Refined Output Round ${i + 1}`, content: r });
+        }
+        
+        console.log("Max refinement rounds reached.");
+        return { finalResult: r, transcript: transcript, totalRounds: n };
+    }
+
 }
 
 const sendAudioRequest = async (text, model, voice, url) => {
@@ -145,3 +219,4 @@ export const TTSConfig = {
     sendAudioRequest: sendAudioRequest,
     baseUrl: 'https://api.openai.com/v1',
 }
+

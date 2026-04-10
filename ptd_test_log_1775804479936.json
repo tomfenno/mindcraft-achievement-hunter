@@ -1,0 +1,285 @@
+{
+  "timestamp": "2026-04-10T07:01:19.933Z",
+  "objective": "Collect 1 obsidian make 1 of each type of gold tool and catch and cook a fish.",
+  "totalRounds": 3,
+  "transcript": [
+    {
+      "stage": "Initial Generation",
+      "content": "{\n  \"objective\": \"collect 1 obsidian make 1 of each type of gold tool and catch and cook a fish\",\n  \"sinks\": [\"golden_pickaxe\", \"golden_axe\", \"golden_shovel\", \"golden_sword\", \"cooked_cod\", \"obsidian\"],\n  \"vertices\": [\n    {\n      \"id\": \"gold_ingot\",\n      \"qty\": 7,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_pickaxe\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_axe\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_shovel\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_sword\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"cooked_cod\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"obsidian\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"lava_source\"\n    },\n    {\n      \"id\": \"water_bucket\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"water_source\"\n    },\n    {\n      \"id\": \"lava_bucket\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"lava_source\"\n    },\n    {\n      \"id\": \"furnace\",\n      \"qty\": 1,\n      \"item_type\": \"workstation\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"crafting_table\",\n      \"qty\": 1,\n      \"item_type\": \"workstation\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"coal\",\n      \"qty\": 1,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"raw_cod\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"mob\"\n    },\n    {\n      \"id\": \"any_log\",\n      \"qty\": 1,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"any_plank\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"cobblestone\",\n      \"qty\": 8,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    }\n  ],\n  \"edges\": [\n    {\n      \"from\": \"any_log\",\n      \"to\": \"any_plank\",\n      \"type\": \"crafting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"any_plank\",\n      \"to\": \"crafting_table\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"cobblestone\",\n      \"to\": \"furnace\",\n      \"type\": \"crafting_input\",\n      \"qty\": 8,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"water_bucket\",\n      \"to\": \"obsidian\",\n      \"type\": \"item_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"lava_bucket\",\n      \"to\": \"obsidian\",\n      \"type\": \"item_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_pickaxe\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_axe\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_shovel\",\n      \"type\": \"crafting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_sword\",\n      \"type\": \"crafting_input\",\n      \"qty\": 2,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"raw_cod\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"smelting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"coal\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"fuel_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"furnace\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"furnace\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"coal\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"fuel_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"smelting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    }\n  ]\n}"
+    },
+    {
+      "stage": "Critique Round 1",
+      "content": "{\n  \"verdict\": \"fail\",\n  \"definite_issues\": [\n    {\n      \"id\": \"issue_1\",\n      \"severity\": \"high\",\n      \"rule_area\": \"edge\",\n      \"message\": \"Smelting output does not include required edges.\",\n      \"evidence\": \"The edge from 'gold_ingot' to 'gold_ingot' with type 'smelting_input' is incorrect; it should represent a smelting process from an ore to an ingot.\",\n      \"suggested_fix\": \"Remove the edge from 'gold_ingot' to 'gold_ingot' and ensure that the smelting process is correctly represented.\"\n    },\n    {\n      \"id\": \"issue_2\",\n      \"severity\": \"high\",\n      \"rule_area\": \"quantity\",\n      \"message\": \"Insufficient quantity of gold_ingot for crafting tools.\",\n      \"evidence\": \"The total required gold ingots for crafting tools is 9 (3 for pickaxe, 3 for axe, 1 for shovel, 2 for sword), but only 7 are provided.\",\n      \"suggested_fix\": \"Increase the qty of 'gold_ingot' to at least 9.\"\n    }\n  ],\n  \"possible_issues\": [\n    {\n      \"rule_area\": \"edge\",\n      \"message\": \"The edges for crafting tools may not accurately reflect the required quantities.\",\n      \"evidence\": \"The edges for crafting tools reference 'gold_ingot' but do not account for the total required quantity.\"\n    }\n  ],\n  \"summary\": \"The graph has definite issues related to smelting representation and insufficient quantities for crafting, leading to a failure in meeting the objective requirements.\"\n}"
+    },
+    {
+      "stage": "Refined Output Round 1",
+      "content": "{\n  \"objective\": \"collect 1 obsidian make 1 of each type of gold tool and catch and cook a fish\",\n  \"sinks\": [\"golden_pickaxe\", \"golden_axe\", \"golden_shovel\", \"golden_sword\", \"cooked_cod\", \"obsidian\"],\n  \"vertices\": [\n    {\n      \"id\": \"gold_ingot\",\n      \"qty\": 9,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_pickaxe\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_axe\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_shovel\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_sword\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"cooked_cod\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"obsidian\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"lava_source\"\n    },\n    {\n      \"id\": \"water_bucket\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"water_source\"\n    },\n    {\n      \"id\": \"lava_bucket\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"lava_source\"\n    },\n    {\n      \"id\": \"furnace\",\n      \"qty\": 1,\n      \"item_type\": \"workstation\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"crafting_table\",\n      \"qty\": 1,\n      \"item_type\": \"workstation\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"coal\",\n      \"qty\": 1,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"raw_cod\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"mob\"\n    },\n    {\n      \"id\": \"any_log\",\n      \"qty\": 1,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"any_plank\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"cobblestone\",\n      \"qty\": 8,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    }\n  ],\n  \"edges\": [\n    {\n      \"from\": \"any_log\",\n      \"to\": \"any_plank\",\n      \"type\": \"crafting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"any_plank\",\n      \"to\": \"crafting_table\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"cobblestone\",\n      \"to\": \"furnace\",\n      \"type\": \"crafting_input\",\n      \"qty\": 8,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"water_bucket\",\n      \"to\": \"obsidian\",\n      \"type\": \"item_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"lava_bucket\",\n      \"to\": \"obsidian\",\n      \"type\": \"item_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_pickaxe\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_axe\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_shovel\",\n      \"type\": \"crafting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_sword\",\n      \"type\": \"crafting_input\",\n      \"qty\": 2,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"raw_cod\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"smelting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"coal\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"fuel_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"furnace\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"furnace\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"coal\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"fuel_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    }\n  ]\n}"
+    },
+    {
+      "stage": "Critique Round 2",
+      "content": "{\n  \"verdict\": \"fail\",\n  \"definite_issues\": [\n    {\n      \"id\": \"gold_ingot_smelting\",\n      \"severity\": \"high\",\n      \"rule_area\": \"edge\",\n      \"message\": \"Smelting output 'gold_ingot' does not have the required edges.\",\n      \"evidence\": \"The vertex 'gold_ingot' is missing a 'smelting_input' edge.\",\n      \"suggested_fix\": \"Add a 'smelting_input' edge from a valid ore (e.g., 'gold_ore') to 'gold_ingot'.\"\n    },\n    {\n      \"id\": \"gold_ingot_quantity\",\n      \"severity\": \"high\",\n      \"rule_area\": \"quantity\",\n      \"message\": \"Insufficient quantity of 'gold_ingot' for crafting tools.\",\n      \"evidence\": \"Total required for crafting tools is 9 ingots, but only 9 are provided.\",\n      \"suggested_fix\": \"Ensure that the quantity of 'gold_ingot' is sufficient for the crafting requirements.\"\n    }\n  ],\n  \"possible_issues\": [\n    {\n      \"rule_area\": \"edge\",\n      \"message\": \"The 'lava_bucket' and 'water_bucket' are modeled as item_dependencies for 'obsidian', which may not be necessary.\",\n      \"evidence\": \"Both buckets are not consumed in the process of obtaining 'obsidian'.\"\n    },\n    {\n      \"rule_area\": \"quantity\",\n      \"message\": \"The quantity of 'coal' used for smelting may not be sufficient if multiple smelting tasks are considered.\",\n      \"evidence\": \"Only 1 'coal' is provided, but multiple smelting tasks may require more.\"\n    }\n  ],\n  \"summary\": \"The graph has critical issues with smelting dependencies and quantities that need to be addressed for compliance with the specification.\"\n}"
+    },
+    {
+      "stage": "Refined Output Round 2",
+      "content": "{\n  \"objective\": \"collect 1 obsidian make 1 of each type of gold tool and catch and cook a fish\",\n  \"sinks\": [\"golden_pickaxe\", \"golden_axe\", \"golden_shovel\", \"golden_sword\", \"cooked_cod\", \"obsidian\"],\n  \"vertices\": [\n    {\n      \"id\": \"gold_ingot\",\n      \"qty\": 10,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_pickaxe\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_axe\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_shovel\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_sword\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"cooked_cod\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"obsidian\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"lava_source\"\n    },\n    {\n      \"id\": \"water_bucket\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"water_source\"\n    },\n    {\n      \"id\": \"lava_bucket\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"lava_source\"\n    },\n    {\n      \"id\": \"furnace\",\n      \"qty\": 1,\n      \"item_type\": \"workstation\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"crafting_table\",\n      \"qty\": 1,\n      \"item_type\": \"workstation\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"coal\",\n      \"qty\": 2,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"raw_cod\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"mob\"\n    },\n    {\n      \"id\": \"any_log\",\n      \"qty\": 1,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"any_plank\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"cobblestone\",\n      \"qty\": 8,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"gold_ore\",\n      \"qty\": 1,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    }\n  ],\n  \"edges\": [\n    {\n      \"from\": \"any_log\",\n      \"to\": \"any_plank\",\n      \"type\": \"crafting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"any_plank\",\n      \"to\": \"crafting_table\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"cobblestone\",\n      \"to\": \"furnace\",\n      \"type\": \"crafting_input\",\n      \"qty\": 8,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ore\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"smelting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"coal\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"fuel_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"water_bucket\",\n      \"to\": \"obsidian\",\n      \"type\": \"item_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"lava_bucket\",\n      \"to\": \"obsidian\",\n      \"type\": \"item_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_pickaxe\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_axe\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_shovel\",\n      \"type\": \"crafting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_sword\",\n      \"type\": \"crafting_input\",\n      \"qty\": 2,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"raw_cod\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"smelting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"coal\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"fuel_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"furnace\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"furnace\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    }\n  ]\n}"
+    },
+    {
+      "stage": "Critique Round 3",
+      "content": "{\n  \"verdict\": \"fail\",\n  \"definite_issues\": [\n    {\n      \"id\": \"gold_ingot_overproduction\",\n      \"severity\": \"high\",\n      \"rule_area\": \"quantity\",\n      \"message\": \"The quantity of gold_ingot is excessive compared to the required amount for crafting tools.\",\n      \"evidence\": \"gold_ingot has qty 10, but only 9 are needed for crafting tools.\",\n      \"suggested_fix\": \"Reduce the qty of gold_ingot to 9.\"\n    },\n    {\n      \"id\": \"smelting_rules_violation\",\n      \"severity\": \"high\",\n      \"rule_area\": \"edge\",\n      \"message\": \"The smelting output gold_ingot does not have a workstation_dependency edge.\",\n      \"evidence\": \"gold_ingot is smelted from gold_ore but lacks a workstation_dependency to furnace.\",\n      \"suggested_fix\": \"Add a workstation_dependency edge from furnace to gold_ingot.\"\n    },\n    {\n      \"id\": \"crafting_table_usage\",\n      \"severity\": \"high\",\n      \"rule_area\": \"edge\",\n      \"message\": \"The crafting_table is not used for crafting any tools, which is required.\",\n      \"evidence\": \"All tool crafting edges reference gold_ingot directly without using crafting_table.\",\n      \"suggested_fix\": \"Add workstation_dependency edges from crafting_table to each tool crafted.\"\n    }\n  ],\n  \"possible_issues\": [\n    {\n      \"rule_area\": \"quantity\",\n      \"message\": \"The qty of coal may not be sufficient for all smelting tasks.\",\n      \"evidence\": \"Only 2 coal are present, but both gold_ingot and cooked_cod require coal as fuel.\"\n    }\n  ],\n  \"summary\": \"The graph has multiple high-severity issues related to quantity and edge definitions, particularly regarding the smelting and crafting processes.\"\n}"
+    },
+    {
+      "stage": "Refined Output Round 3",
+      "content": "{\n  \"objective\": \"collect 1 obsidian make 1 of each type of gold tool and catch and cook a fish\",\n  \"sinks\": [\"golden_pickaxe\", \"golden_axe\", \"golden_shovel\", \"golden_sword\", \"cooked_cod\", \"obsidian\"],\n  \"vertices\": [\n    {\n      \"id\": \"gold_ingot\",\n      \"qty\": 9,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_pickaxe\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_axe\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_shovel\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"golden_sword\",\n      \"qty\": 1,\n      \"item_type\": \"tool\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"cooked_cod\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"obsidian\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"lava_source\"\n    },\n    {\n      \"id\": \"water_bucket\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"water_source\"\n    },\n    {\n      \"id\": \"lava_bucket\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"lava_source\"\n    },\n    {\n      \"id\": \"furnace\",\n      \"qty\": 1,\n      \"item_type\": \"workstation\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"crafting_table\",\n      \"qty\": 1,\n      \"item_type\": \"workstation\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"coal\",\n      \"qty\": 2,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"raw_cod\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"mob\"\n    },\n    {\n      \"id\": \"any_log\",\n      \"qty\": 1,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"any_plank\",\n      \"qty\": 1,\n      \"item_type\": \"item\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"cobblestone\",\n      \"qty\": 8,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    },\n    {\n      \"id\": \"gold_ore\",\n      \"qty\": 1,\n      \"item_type\": \"resource\",\n      \"acquisition_dependency\": \"none\"\n    }\n  ],\n  \"edges\": [\n    {\n      \"from\": \"any_log\",\n      \"to\": \"any_plank\",\n      \"type\": \"crafting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"any_plank\",\n      \"to\": \"crafting_table\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"cobblestone\",\n      \"to\": \"furnace\",\n      \"type\": \"crafting_input\",\n      \"qty\": 8,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ore\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"smelting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"coal\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"fuel_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"water_bucket\",\n      \"to\": \"obsidian\",\n      \"type\": \"item_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"lava_bucket\",\n      \"to\": \"obsidian\",\n      \"type\": \"item_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_pickaxe\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_axe\",\n      \"type\": \"crafting_input\",\n      \"qty\": 3,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_shovel\",\n      \"type\": \"crafting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"gold_ingot\",\n      \"to\": \"golden_sword\",\n      \"type\": \"crafting_input\",\n      \"qty\": 2,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"raw_cod\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"smelting_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"coal\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"fuel_input\",\n      \"qty\": 1,\n      \"consumed\": true\n    },\n    {\n      \"from\": \"furnace\",\n      \"to\": \"cooked_cod\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"furnace\",\n      \"to\": \"gold_ingot\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"crafting_table\",\n      \"to\": \"golden_pickaxe\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"crafting_table\",\n      \"to\": \"golden_axe\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"crafting_table\",\n      \"to\": \"golden_shovel\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    },\n    {\n      \"from\": \"crafting_table\",\n      \"to\": \"golden_sword\",\n      \"type\": \"workstation_dependency\",\n      \"qty\": 1,\n      \"consumed\": false\n    }\n  ]\n}"
+    }
+  ],
+  "finalGraph": {
+    "objective": "collect 1 obsidian make 1 of each type of gold tool and catch and cook a fish",
+    "sinks": [
+      "golden_pickaxe",
+      "golden_axe",
+      "golden_shovel",
+      "golden_sword",
+      "cooked_cod",
+      "obsidian"
+    ],
+    "vertices": [
+      {
+        "id": "gold_ingot",
+        "qty": 9,
+        "item_type": "item",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "golden_pickaxe",
+        "qty": 1,
+        "item_type": "tool",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "golden_axe",
+        "qty": 1,
+        "item_type": "tool",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "golden_shovel",
+        "qty": 1,
+        "item_type": "tool",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "golden_sword",
+        "qty": 1,
+        "item_type": "tool",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "cooked_cod",
+        "qty": 1,
+        "item_type": "item",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "obsidian",
+        "qty": 1,
+        "item_type": "item",
+        "acquisition_dependency": "lava_source"
+      },
+      {
+        "id": "water_bucket",
+        "qty": 1,
+        "item_type": "item",
+        "acquisition_dependency": "water_source"
+      },
+      {
+        "id": "lava_bucket",
+        "qty": 1,
+        "item_type": "item",
+        "acquisition_dependency": "lava_source"
+      },
+      {
+        "id": "furnace",
+        "qty": 1,
+        "item_type": "workstation",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "crafting_table",
+        "qty": 1,
+        "item_type": "workstation",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "coal",
+        "qty": 2,
+        "item_type": "resource",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "raw_cod",
+        "qty": 1,
+        "item_type": "item",
+        "acquisition_dependency": "mob"
+      },
+      {
+        "id": "any_log",
+        "qty": 1,
+        "item_type": "resource",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "any_plank",
+        "qty": 1,
+        "item_type": "item",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "cobblestone",
+        "qty": 8,
+        "item_type": "resource",
+        "acquisition_dependency": "none"
+      },
+      {
+        "id": "gold_ore",
+        "qty": 1,
+        "item_type": "resource",
+        "acquisition_dependency": "none"
+      }
+    ],
+    "edges": [
+      {
+        "from": "any_log",
+        "to": "any_plank",
+        "type": "crafting_input",
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "from": "any_plank",
+        "to": "crafting_table",
+        "type": "crafting_input",
+        "qty": 3,
+        "consumed": true
+      },
+      {
+        "from": "cobblestone",
+        "to": "furnace",
+        "type": "crafting_input",
+        "qty": 8,
+        "consumed": true
+      },
+      {
+        "from": "gold_ore",
+        "to": "gold_ingot",
+        "type": "smelting_input",
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "from": "coal",
+        "to": "gold_ingot",
+        "type": "fuel_input",
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "from": "water_bucket",
+        "to": "obsidian",
+        "type": "item_dependency",
+        "qty": 1,
+        "consumed": false
+      },
+      {
+        "from": "lava_bucket",
+        "to": "obsidian",
+        "type": "item_dependency",
+        "qty": 1,
+        "consumed": false
+      },
+      {
+        "from": "gold_ingot",
+        "to": "golden_pickaxe",
+        "type": "crafting_input",
+        "qty": 3,
+        "consumed": true
+      },
+      {
+        "from": "gold_ingot",
+        "to": "golden_axe",
+        "type": "crafting_input",
+        "qty": 3,
+        "consumed": true
+      },
+      {
+        "from": "gold_ingot",
+        "to": "golden_shovel",
+        "type": "crafting_input",
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "from": "gold_ingot",
+        "to": "golden_sword",
+        "type": "crafting_input",
+        "qty": 2,
+        "consumed": true
+      },
+      {
+        "from": "raw_cod",
+        "to": "cooked_cod",
+        "type": "smelting_input",
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "from": "coal",
+        "to": "cooked_cod",
+        "type": "fuel_input",
+        "qty": 1,
+        "consumed": true
+      },
+      {
+        "from": "furnace",
+        "to": "cooked_cod",
+        "type": "workstation_dependency",
+        "qty": 1,
+        "consumed": false
+      },
+      {
+        "from": "furnace",
+        "to": "gold_ingot",
+        "type": "workstation_dependency",
+        "qty": 1,
+        "consumed": false
+      },
+      {
+        "from": "crafting_table",
+        "to": "golden_pickaxe",
+        "type": "workstation_dependency",
+        "qty": 1,
+        "consumed": false
+      },
+      {
+        "from": "crafting_table",
+        "to": "golden_axe",
+        "type": "workstation_dependency",
+        "qty": 1,
+        "consumed": false
+      },
+      {
+        "from": "crafting_table",
+        "to": "golden_shovel",
+        "type": "workstation_dependency",
+        "qty": 1,
+        "consumed": false
+      },
+      {
+        "from": "crafting_table",
+        "to": "golden_sword",
+        "type": "workstation_dependency",
+        "qty": 1,
+        "consumed": false
+      }
+    ]
+  }
+}
