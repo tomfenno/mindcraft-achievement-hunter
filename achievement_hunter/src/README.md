@@ -91,6 +91,31 @@ const prompt = fill_ptd_refinement_prompt('Craft a stone pickaxe', graph_obj, va
 
 ---
 
+### `trim_graph_for_scsg(graph)`
+Trims a PTD graph down to only the fields required by the scsg prompt, reducing token usage. Strips `item_type` and `acquisition_dependency` from vertices, and `type` from edges.
+
+**Parameters**
+- `graph` — JS object (full PTD dependency graph)
+
+**Returns** — trimmed JS object with schema:
+
+```json
+{
+  "objective": "<string>",
+  "sinks": ["<vertex_id>"],
+  "vertices": [{ "id": "<string>", "qty": "<int>" }],
+  "edges": [{ "from": "<string>", "to": "<string>", "qty": "<int>", "consumed": "<bool>" }]
+}
+```
+
+**Example**
+```js
+const trimmed = trim_graph_for_scsg(ptd_graph);
+const prompt = fill_scsg_prompt(trimmed, state);
+```
+
+---
+
 ### `fill_scsg_prompt(graph, state)`
 Fills the `scsg_prompt` template. Used to compute a state-conditioned subgraph given a dependency graph and current bot state.
 

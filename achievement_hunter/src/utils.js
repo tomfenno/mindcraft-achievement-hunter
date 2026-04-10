@@ -120,6 +120,24 @@ export function fill_ptd_refinement_prompt(
 }
 
 /**
+ * Trims a PTD graph down to only the fields required by the scsg prompt,
+ * reducing token usage. Keeps objective, sinks, vertex {id, qty}, and
+ * edge {from, to, qty, consumed}.
+ *
+ * Example:
+ *   const trimmed = trim_graph_for_scsg(ptd_graph);
+ *   const prompt = fill_scsg_prompt(trimmed, state);
+ */
+export function trim_graph_for_scsg(graph) {
+  return {
+    objective: graph.objective,
+    sinks: graph.sinks,
+    vertices: graph.vertices.map(({id, qty}) => ({id, qty})),
+    edges: graph.edges.map(({from, to, qty, consumed}) => ({from, to, qty, consumed})),
+  };
+}
+
+/**
  * Fills the scsg_prompt template with a graph object and a state object.
  * Returns the filled prompt string.
  *

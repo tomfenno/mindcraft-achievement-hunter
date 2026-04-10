@@ -6,7 +6,7 @@ import convoManager from '../conversation.js';
 import * as world from '../library/world.js';
 import {checkBlueprint, checkLevelBlueprint} from '../tasks/construction_tasks.js';
 import { getFullState } from '../library/full_state.js';
-import { save_json, fill_ptd_prompt, fill_ptd_feedback_prompt, fill_ptd_refinement_prompt, fill_scsg_prompt, fill_scsg_feedback_prompt, fill_scsg_refiner_prompt } from '../../../achievement_hunter/src/utils.js';
+import { save_json, fill_ptd_prompt, fill_ptd_feedback_prompt, fill_ptd_refinement_prompt, fill_scsg_prompt, fill_scsg_feedback_prompt, fill_scsg_refiner_prompt, trim_graph_for_scsg } from '../../../achievement_hunter/src/utils.js';
 
 import {getCommandDocs} from './index.js';
 
@@ -519,6 +519,17 @@ export const queryList = [
       const result = fill_ptd_refinement_prompt(objective, candidate_graph, validator_output);
       writeFileSync('achievement_hunter/fill_prompt/outputs/ptd_refinement_prompt.md', result, 'utf8');
       return '!testFillPtdRefinementPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/ptd_refinement_prompt.md';
+    }
+  },
+  {
+    name: '!testTrimGraphForScsg',
+    description: 'Test: trims example candidate_graph.json to scsg fields and saves output.',
+    perform: function(_agent) {
+      const input_dir = 'achievement_hunter/fill_prompt/example_inputs';
+      const graph = JSON.parse(readFileSync(`${input_dir}/candidate_graph.json`, 'utf8'));
+      const trimmed = trim_graph_for_scsg(graph);
+      writeFileSync('achievement_hunter/fill_prompt/outputs/trimmed_graph.json', JSON.stringify(trimmed, null, 2), 'utf8');
+      return '!testTrimGraphForScsg succeeded: output saved to achievement_hunter/fill_prompt/outputs/trimmed_graph.json';
     }
   },
   {

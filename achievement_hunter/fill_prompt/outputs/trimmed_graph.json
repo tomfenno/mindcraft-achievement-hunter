@@ -1,0 +1,146 @@
+{
+  "objective": "{{Smelt an iron ingot}}",
+  "sinks": [
+    "iron_ingot"
+  ],
+  "vertices": [
+    {
+      "id": "iron_ingot",
+      "qty": 1
+    },
+    {
+      "id": "raw_iron",
+      "qty": 1
+    },
+    {
+      "id": "furnace",
+      "qty": 1
+    },
+    {
+      "id": "stone_pickaxe",
+      "qty": 1
+    },
+    {
+      "id": "cobblestone",
+      "qty": 11
+    },
+    {
+      "id": "wooden_pickaxe",
+      "qty": 1
+    },
+    {
+      "id": "crafting_table",
+      "qty": 1
+    },
+    {
+      "id": "stick",
+      "qty": 4
+    },
+    {
+      "id": "any_plank",
+      "qty": 12
+    },
+    {
+      "id": "any_log",
+      "qty": 3
+    }
+  ],
+  "edges": [
+    {
+      "from": "raw_iron",
+      "to": "iron_ingot",
+      "qty": 1,
+      "consumed": true
+    },
+    {
+      "from": "any_plank",
+      "to": "iron_ingot",
+      "qty": 1,
+      "consumed": true
+    },
+    {
+      "from": "furnace",
+      "to": "iron_ingot",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "stone_pickaxe",
+      "to": "raw_iron",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "cobblestone",
+      "to": "furnace",
+      "qty": 8,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "furnace",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "cobblestone",
+      "to": "stone_pickaxe",
+      "qty": 3,
+      "consumed": true
+    },
+    {
+      "from": "stick",
+      "to": "stone_pickaxe",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "stone_pickaxe",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "wooden_pickaxe",
+      "to": "cobblestone",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "any_plank",
+      "to": "wooden_pickaxe",
+      "qty": 3,
+      "consumed": true
+    },
+    {
+      "from": "stick",
+      "to": "wooden_pickaxe",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "wooden_pickaxe",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "any_plank",
+      "to": "crafting_table",
+      "qty": 4,
+      "consumed": true
+    },
+    {
+      "from": "any_plank",
+      "to": "stick",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "any_log",
+      "to": "any_plank",
+      "qty": 3,
+      "consumed": true
+    }
+  ]
+}
