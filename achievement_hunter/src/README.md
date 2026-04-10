@@ -207,6 +207,24 @@ const prompt = fill_scsg_refiner_prompt(task_prompt, previous_candidate_obj, aud
 
 ---
 
+### `fill_next_task_selector_prompt(enriched_subgraph, state)`
+Fills the `next_task_selector` prompt template with an enriched subgraph object and a state object. Returns the filled prompt string.
+
+**Parameters**
+- `enriched_subgraph` — JS object (enriched subgraph, e.g. from `enrich_subgraph`)
+- `state` — JS object (bot state, e.g. from `get_state`)
+
+**Returns** — filled prompt string
+
+**Example**
+```js
+const enriched = enrich_subgraph(subgraph, ptd_graph);
+const state = get_state(agent);
+const prompt = fill_next_task_selector_prompt(enriched, state);
+```
+
+---
+
 ## state.js
 
 ### `get_state(agent)`

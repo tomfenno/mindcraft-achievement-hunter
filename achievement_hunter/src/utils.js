@@ -220,6 +220,30 @@ export function fill_scsg_feedback_prompt(task_prompt, candidate_answer) {
 }
 
 /**
+ * Fills the task_prompt template with an enriched subgraph object and a
+ * state object. Returns the filled prompt string.
+ *
+ * Example:
+ *   const prompt = fill_task_prompt(enriched_subgraph_obj, state_obj);
+ */
+export function fill_task_prompt(enriched_subgraph, state) {
+  const template = _read_template('../docs/prompts/task_prompts/task_prompt.md');
+  return _fill(template, {'ENRICHED_SUBGRAPH': enriched_subgraph, 'STATE': state});
+}
+
+/**
+ * Fills the next_task_selector prompt template with an enriched subgraph
+ * object and a state object. Returns the filled prompt string.
+ *
+ * Example:
+ *   const prompt = fill_next_task_selector_prompt(enriched_subgraph_obj, state_obj);
+ */
+export function fill_next_task_selector_prompt(enriched_subgraph, state) {
+  const template = _read_template('../docs/prompts/next_task_selector_prompts/next_task_selector.md');
+  return _fill(template, {'ENRICHED_SUBGRAPH': enriched_subgraph, 'STATE': state});
+}
+
+/**
  * Fills the scsg_refiner_prompt template with a task prompt string, a
  * previous candidate object, and an audit report object. The task_prompt
  * is typically the output of fill_scsg_prompt. Returns the filled prompt string.

@@ -6,7 +6,7 @@ import convoManager from '../conversation.js';
 import * as world from '../library/world.js';
 import {checkBlueprint, checkLevelBlueprint} from '../tasks/construction_tasks.js';
 import { getFullState } from '../library/full_state.js';
-import { save_json, fill_ptd_prompt, fill_ptd_feedback_prompt, fill_ptd_refinement_prompt, fill_scsg_prompt, fill_scsg_feedback_prompt, fill_scsg_refiner_prompt, trim_graph_for_scsg, enrich_subgraph } from '../../../achievement_hunter/src/utils.js';
+import { save_json, fill_ptd_prompt, fill_ptd_feedback_prompt, fill_ptd_refinement_prompt, fill_scsg_prompt, fill_scsg_feedback_prompt, fill_scsg_refiner_prompt, fill_next_task_selector_prompt, trim_graph_for_scsg, enrich_subgraph } from '../../../achievement_hunter/src/utils.js';
 
 import {getCommandDocs} from './index.js';
 
@@ -591,6 +591,17 @@ export const queryList = [
       const result = fill_scsg_refiner_prompt(task_prompt, previous_candidate, audit_report);
       writeFileSync('achievement_hunter/fill_prompt/outputs/scsg_refiner_prompt.md', result, 'utf8');
       return '!testFillScsgRefinerPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/scsg_refiner_prompt.md';
+    }
+  },
+  {
+    name: '!testFillNextTaskSelectorPrompt',
+    description: 'Test: fills next_task_selector prompt using enriched_subgraph_3.json and state3.json and saves output.',
+    perform: function(_agent) {
+      const enriched_subgraph = JSON.parse(readFileSync('achievement_hunter/fill_prompt/outputs/enriched_subgraph_3.json', 'utf8'));
+      const state = JSON.parse(readFileSync('achievement_hunter/docs/rollouts/acquire_hardware_platonic/states/state3.json', 'utf8'));
+      const result = fill_next_task_selector_prompt(enriched_subgraph, state);
+      writeFileSync('achievement_hunter/fill_prompt/outputs/next_task_selector_prompt.md', result, 'utf8');
+      return '!testFillNextTaskSelectorPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/next_task_selector_prompt.md';
     }
   },
   {
