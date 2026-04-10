@@ -56,7 +56,7 @@ Examples:
 
 ### TASK
 
-```json id="u8xioe"
+```json
 {
   "target_item": "<item_id> | optional",
   "qty": "<int> | optional",
@@ -68,7 +68,7 @@ Examples:
 
 ### CURRENT STATE
 
-```json id="kinmyk"
+```json
 {
   "position": { "x": "<float>", "y": "<float>", "z": "<float>" },
   "status": {
@@ -157,7 +157,7 @@ Use double quotes for string arguments.
 
 If the task is complete, return exactly:
 
-```json id="59wqut"
+```json
 {"status":"TASK_COMPLETE"}
 ```
 
@@ -178,7 +178,7 @@ Identify:
 
 If the task is already complete, return:
 
-```json id="degi1g"
+```json
 {"status":"TASK_COMPLETE"}
 ```
 
@@ -293,12 +293,12 @@ No prose. No explanation. No markdown fences.
 
 TASK:
 
-```json id="iwjkqv"
+```json
 {{TASK}}
 ```
 
 CURRENT STATE:
 
-```json id="3k6mpj"
+```json
 {{STATE}}
 ```
