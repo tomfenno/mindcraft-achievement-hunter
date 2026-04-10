@@ -125,7 +125,7 @@ export class Prompter {
                 throw error;
             });
 
-            console.log('Examples initialized.');
+            // console.log('Examples initialized.');
         } catch (error) {
             console.error('Failed to initialize examples:', error);
             console.error('Stack trace:', error.stack);

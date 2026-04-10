@@ -120,7 +120,7 @@ export class Agent {
             try {
                 clearTimeout(spawnTimeout);
                 addBrowserViewer(this.bot, count_id);
-                console.log('Initializing vision intepreter...');
+                // console.log('Initializing vision intepreter...');
                 this.vision_interpreter = new VisionInterpreter(this, settings.allow_vision);
 
                 // wait for a bit so stats are not undefined
@@ -137,22 +137,29 @@ export class Agent {
                         this.task.initBotTask();
                         this.task.setAgentGoal();
 
-                        const pipelineGoal =
-                            settings.task.goal ||
-                            `Obtain ${settings.task.number_of_target || 1} ${settings.task.target || 'target item'}`;
+                        const pipelineGoal = this.getPipelineGoal();
+                        await this.initializeTwoStagePipeline(pipelineGoal);
+                        await this.advanceTwoStagePipeline();
 
-                        const pipelineResult = await this.runTwoStagePipeline(pipelineGoal);
-
-                        if (pipelineResult?.stageB?.selected_node) {
-                            await this.openChat(
-                                `Pipeline selected next node: ${pipelineResult.stageB.selected_node}`
-                            );
+                        const guidance = this.formatPipelineGuidance();
+                        if (guidance) {
+                            await this.history.add('system', guidance);
+                            this.history.save();
                         }
                     }
                 } else {
                     // set the goal without initializing the rest of the task
                     if (settings.task) {
                         this.task.setAgentGoal();
+                        const pipelineGoal = this.getPipelineGoal();
+                        await this.initializeTwoStagePipeline(pipelineGoal);
+                        await this.advanceTwoStagePipeline();
+
+                        const guidance = this.formatPipelineGuidance();
+                        if (guidance) {
+                            await this.history.add('system', guidance);
+                            this.history.save();
+                        }
                     }
                 }
 
@@ -268,58 +275,58 @@ export class Agent {
     getPipelineGoal() {
     if (!settings.task) return null;
 
-    return (
-        settings.task.goal ||
-        settings.task.description ||
-        `Obtain ${settings.task.number_of_target || 1} ${settings.task.target || 'target item'}`
-    );
-}
+            return (
+                settings.task.goal ||
+                settings.task.description ||
+                `Obtain ${settings.task.number_of_target || 1} ${settings.task.target || 'target item'}`
+            );
+        }
 
-formatPipelineGuidance() {
-    if (!this.pipeline_state?.enabled || !this.pipeline_state?.last_stage_b) return '';
+        formatPipelineGuidance() {
+            if (!this.pipeline_state?.enabled || !this.pipeline_state?.last_stage_b) return '';
 
-    const b = this.pipeline_state.last_stage_b;
-    if (!b.selected_node_id || b.selected_node_id === 'none') return '';
+            const b = this.pipeline_state.last_stage_b;
+            if (!b.selected_node_id || b.selected_node_id === 'none') return '';
 
-    return [
-        'PIPELINE GUIDANCE:',
-        `Selected node: ${b.selected_node_label}`,
-        `Reason: ${b.reason}`,
-        `Action hint: ${b.action_hint}`,
-        'Prioritize actions that directly advance this selected node.'
-    ].join('\n');
-}
+            return [
+                'PIPELINE GUIDANCE:',
+                `Selected node: ${b.selected_node_label}`,
+                `Reason: ${b.reason}`,
+                `Action hint: ${b.action_hint}`,
+                'Prioritize actions that directly advance this selected node.'
+            ].join('\n');
+        }
 
-async initializeTwoStagePipeline(goal) {
-    try {
-        if (!goal) return null;
+        async initializeTwoStagePipeline(goal) {
+            try {
+                if (!goal) return null;
 
-        console.log(`[${this.name}] Initializing two-stage pipeline for goal:`, goal);
+                console.log(`[${this.name}] Initializing two-stage pipeline for goal:`, goal);
 
-        const artifact = await this.two_stage.runStageA(goal);
-        this.pipeline_state.enabled = true;
-        this.pipeline_state.goal = goal;
-        this.pipeline_state.artifact = artifact;
-        this.pipeline_state.last_stage_b = null;
-        this.pipeline_state.last_action_result = null;
-        this.pipeline_state.initialized = true;
+                const artifact = await this.two_stage.runStageA(goal);
+                this.pipeline_state.enabled = true;
+                this.pipeline_state.goal = goal;
+                this.pipeline_state.artifact = artifact;
+                this.pipeline_state.last_stage_b = null;
+                this.pipeline_state.last_action_result = null;
+                this.pipeline_state.initialized = true;
 
-        console.log(`[${this.name}] Stage A artifact:`, JSON.stringify(artifact, null, 2));
+                console.log(`[${this.name}] Stage A artifact:`, JSON.stringify(artifact, null, 2));
 
-        await this.history.add(
-            'system',
-            `Two-stage Stage A artifact initialized:\n${JSON.stringify(artifact)}`
-        );
-        this.history.save();
+                await this.history.add(
+                    'system',
+                    `Two-stage Stage A artifact initialized:\n${JSON.stringify(artifact)}`
+                );
+                this.history.save();
 
-        return artifact;
-    } catch (err) {
-        console.error(`[${this.name}] Failed to initialize two-stage pipeline:`, err);
-        await this.history.add('system', `Two-stage Stage A initialization failed: ${String(err)}`);
-        this.history.save();
-        return null;
-    }
-}
+                return artifact;
+            } catch (err) {
+                console.error(`[${this.name}] Failed to initialize two-stage pipeline:`, err);
+                await this.history.add('system', `Two-stage Stage A initialization failed: ${String(err)}`);
+                this.history.save();
+                return null;
+            }
+        }
 
         async advanceTwoStagePipeline() {
             try {
@@ -338,6 +345,10 @@ async initializeTwoStagePipeline(goal) {
 
                 console.log(`[${this.name}] Updated artifact:`, JSON.stringify(this.pipeline_state.artifact, null, 2));
                 console.log(`[${this.name}] Stage B output:`, JSON.stringify(result.stageB, null, 2));
+
+                if (result.stageB?.selected_node_label && result.stageB.selected_node_label !== 'none') {
+                    await this.openChat(`Pipeline node: ${result.stageB.selected_node_label}`);
+                }
 
                 await this.history.add(
                     'system',
@@ -446,6 +457,10 @@ async initializeTwoStagePipeline(goal) {
 
         // Handle other user messages
         await this.history.add(source, message);
+        const initialPipelineGuidance = this.formatPipelineGuidance();
+        if (initialPipelineGuidance) {
+            await this.history.add('system', initialPipelineGuidance);
+        }
         this.history.save();
 
         if (!self_prompt && this.self_prompter.isActive()) // message is from user during self-prompting
@@ -496,14 +511,24 @@ async initializeTwoStagePipeline(goal) {
                 }
 
                 let execute_res = await executeCommand(this, res);
-
                 console.log('Agent executed:', command_name, 'and got:', execute_res);
                 used_command = true;
 
-                if (execute_res)
-                    this.history.add('system', execute_res);
-                else
+                if (execute_res) {
+                    this.pipeline_state.last_action_result = execute_res;
+                    await this.history.add('system', execute_res);
+
+                    if (this.pipeline_state?.enabled) {
+                        await this.advanceTwoStagePipeline();
+
+                        const pipelineGuidance = this.formatPipelineGuidance();
+                        if (pipelineGuidance) {
+                            await this.history.add('system', pipelineGuidance);
+                        }
+                    }
+                } else {
                     break;
+                }
             }
             else { // conversation response
                 this.history.add(this.name, res);

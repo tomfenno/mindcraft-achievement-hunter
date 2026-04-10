@@ -19,5 +19,121 @@
       },
       "missing_items": [],
       "requires_ctable": false
+    },
+    "craft_wooden_pickaxe_empty": {
+      "goal": "Craft a wooden pickaxe from nothing",
+      "initial_inventory": {
+        "0": {}
+      },
+      "agent_count": 1,
+      "target": "wooden_pickaxe",
+      "number_of_target": 1,
+      "type": "techtree",
+      "max_depth": 3,
+      "depth": 0,
+      "timeout": 420,
+      "blocked_actions": {
+        "0": [],
+        "1": []
+      },
+      "missing_items": [],
+      "requires_ctable": true
+    },
+    "craft_stone_pickaxe_empty": {
+      "goal": "Craft a stone pickaxe from nothing",
+      "initial_inventory": {
+        "0": {}
+      },
+      "agent_count": 1,
+      "target": "stone_pickaxe",
+      "number_of_target": 1,
+      "type": "techtree",
+      "max_depth": 5,
+      "depth": 0,
+      "timeout": 540,
+      "blocked_actions": {
+        "0": [],
+        "1": []
+      },
+      "missing_items": [],
+      "requires_ctable": true
+    },
+    "craft_furnace_empty": {
+      "goal": "Craft a furnace from nothing",
+      "initial_inventory": {
+        "0": {}
+      },
+      "agent_count": 1,
+      "target": "furnace",
+      "number_of_target": 1,
+      "type": "techtree",
+      "max_depth": 5,
+      "depth": 0,
+      "timeout": 540,
+      "blocked_actions": {
+        "0": [],
+        "1": []
+      },
+      "missing_items": [],
+      "requires_ctable": true
+    },
+    "craft_torches_empty": {
+      "goal": "Craft at least eight torches from nothing",
+      "initial_inventory": {
+        "0": {}
+      },
+      "agent_count": 1,
+      "target": "torch",
+      "number_of_target": 8,
+      "type": "techtree",
+      "max_depth": 6,
+      "depth": 0,
+      "timeout": 720,
+      "blocked_actions": {
+        "0": [],
+        "1": []
+      },
+      "missing_items": [],
+      "requires_ctable": true
+    },
+    "smelt_glass_empty": {
+      "goal": "Smelt four glass blocks from nothing",
+      "initial_inventory": {
+        "0": {}
+      },
+      "agent_count": 1,
+      "target": "glass",
+      "number_of_target": 4,
+      "type": "techtree",
+      "max_depth": 6,
+      "depth": 0,
+      "timeout": 720,
+      "blocked_actions": {
+        "0": [],
+        "1": []
+      },
+      "missing_items": [],
+      "requires_ctable": true
+    },
+    "craft_furnace_seeded_logs": {
+      "goal": "Craft a furnace using the provided logs",
+      "initial_inventory": {
+        "0": {
+          "oak_log": 6
+        }
+      },
+      "agent_count": 1,
+      "target": "furnace",
+      "number_of_target": 1,
+      "type": "techtree",
+      "max_depth": 4,
+      "depth": 0,
+      "timeout": 480,
+      "blocked_actions": {
+        "0": [],
+        "1": []
+      },
+      "missing_items": [],
+      "requires_ctable": true
     }
 }
