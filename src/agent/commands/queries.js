@@ -1,9 +1,11 @@
 import {load} from 'cheerio';
+import { readFileSync } from 'fs';
 
 import * as mc from '../../utils/mcdata.js';
 import convoManager from '../conversation.js';
 import * as world from '../library/world.js';
 import {checkBlueprint, checkLevelBlueprint} from '../tasks/construction_tasks.js';
+import { saveJSON } from '../../../achievement_hunter/src/utils.js';
 
 import {getCommandDocs} from './index.js';
 
@@ -473,6 +475,19 @@ export const queryList = [
       };
 
       return JSON.stringify(state, null, 2);
+    }
+  },
+  {
+    name: '!testSaveJSON',
+    description: 'Test: reads example_llm_output.txt, extracts the JSON object, and saves it to save_json_test.json.',
+    perform: function(_agent) {
+      const inputPath = 'achievement_hunter/docs/example_llm_output.txt';
+      const outputPath = 'achievement_hunter/docs/save_json_test.json';
+      const raw = readFileSync(inputPath, 'utf8');
+      const result = saveJSON(raw, outputPath);
+      if (result === null)
+        return `!testSaveJSON failed: no valid JSON found in ${inputPath}`;
+      return `!testSaveJSON succeeded: JSON saved to ${outputPath}`;
     }
   },
   {
