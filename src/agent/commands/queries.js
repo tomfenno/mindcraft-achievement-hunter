@@ -5,6 +5,7 @@ import * as mc from '../../utils/mcdata.js';
 import convoManager from '../conversation.js';
 import * as world from '../library/world.js';
 import {checkBlueprint, checkLevelBlueprint} from '../tasks/construction_tasks.js';
+import { getFullState } from '../library/full_state.js';
 import { save_json, fill_ptd_prompt, fill_ptd_feedback_prompt, fill_ptd_refinement_prompt, fill_scsg_prompt, fill_scsg_feedback_prompt, fill_scsg_refiner_prompt } from '../../../achievement_hunter/src/utils.js';
 
 import {getCommandDocs} from './index.js';
@@ -475,6 +476,13 @@ export const queryList = [
       };
 
       return JSON.stringify(state, null, 2);
+    }
+  },
+  {
+    name: '!fullState',
+    description: 'Get the full bot state as a structured JSON object.',
+    perform: function(agent) {
+      return JSON.stringify(getFullState(agent), null, 2);
     }
   },
   {

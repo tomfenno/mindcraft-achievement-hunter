@@ -7,85 +7,16 @@ const __dirname = path.dirname(__filename);
 
 
 /**
- * Extracts the first JSON object from an LLM response string and writes
- * it to filePath (creates parent directories as needed).
- * Returns the parsed object, or null if extraction failed.
+ * Extracts the first JSON object or array from an LLM response string.
+ * Handles extra text before/after the JSON and markdown code fences.
+ * Returns the parsed object, or null if no valid JSON is found.
  *
- * Usage example:
- * import { save_json } from './src/utils.js';
+ * Example:
+ *   const obj = extract_json('Here is the result: {"a": 1} done.');
+ *   // obj => { a: 1 }
  *
- * const llmOutput = await prompter.promptConvo(messages);
- * const result = save_json(llm_output, './achievement_hunter/logs/output.json');
- */
-export function save_json(str, file_path) {
-  const obj = extract_json(str);
-  if (obj === null) {
-    console.warn('save_json: no valid JSON found in LLM response.');
-    return null;
-  }
-  mkdirSync(path.dirname(file_path), {recursive: true});
-  writeFileSync(file_path, JSON.stringify(obj, null, 4), 'utf8');
-  return obj;
-}
-
-
-
-export function fill_ptd_prompt(objective) {
-  const template = _read_template('../docs/prompts/ptd_prompts/ptd_prompt.md');
-  return _fill(template, {OBJECTIVE: objective});
-}
-
-export function fill_ptd_feedback_prompt(objective, candidate_graph) {
-  const template =
-      _read_template('../docs/prompts/ptd_prompts/ptd_feedback_prompt.md');
-  return _fill(
-      template, {OBJECTIVE: objective, 'CANDIDATE GRAPH': candidate_graph});
-}
-
-export function fill_ptd_refinement_prompt(
-    objective, candidate_graph, validator_output) {
-  const template =
-      _read_template('../docs/prompts/ptd_prompts/ptd_refinement_prompt.md');
-  return _fill(template, {
-    OBJECTIVE: objective,
-    'CANDIDATE GRAPH': candidate_graph,
-    'VALIDATOR OUTPUT': validator_output,
-  });
-}
-
-export function fill_scsg_prompt(graph, state) {
-  const template = _read_template('../docs/prompts/scsg_prompts/scsg_prompt.md');
-  return _fill(template, {GRAPH: graph, STATE: state});
-}
-
-export function fill_scsg_feedback_prompt(task_prompt, candidate_answer) {
-  const template =
-      _read_template('../docs/prompts/scsg_prompts/scsg_feedback_prompt.md');
-  return _fill(template, {
-    'FULL TASK PROMPT WITH CONCRETE G AND S': task_prompt,
-    'CANDIDATE JSON': candidate_answer,
-  });
-}
-
-export function fill_scsg_refiner_prompt(
-    task_prompt, previous_candidate, audit_report) {
-  const template =
-      _read_template('../docs/prompts/scsg_prompts/scsg_refiner_prompt.md');
-  return _fill(template, {
-    'FULL TASK PROMPT WITH CONCRETE G AND S': task_prompt,
-    'PREVIOUS CANDIDATE JSON': previous_candidate,
-    'AUDIT REPORT JSON': audit_report,
-  });
-}
-
-
-/* Helper Functions ------------------------------------------------------ */
-
-/**
- * Extracts the first JSON object or array from an LLM string response,
- * handling arbitrary text before/after and markdown code fences.
- * Returns the parsed object, or null if none found.
- *
+ *   const obj = extract_json('```json\n{"a": 1}\n```');
+ *   // obj => { a: 1 }
  */
 export function extract_json(str) {
   // strip markdown code fences if present
@@ -122,12 +53,137 @@ export function extract_json(str) {
   }
 }
 
-// --- Prompt helpers ---
+/**
+ * Extracts the first JSON object from an LLM response string and writes
+ * it to file_path. Creates parent directories if they don't exist.
+ * Returns the parsed object, or null if no valid JSON is found.
+ *
+ * Example:
+ *   const llm_output = await prompter.promptConvo(messages);
+ *   const obj = save_json(llm_output, 'achievement_hunter/logs/output.json');
+ *   // obj => { ... } or null if extraction failed
+ */
+export function save_json(str, file_path) {
+  const obj = extract_json(str);
+  if (obj === null) {
+    console.warn('save_json: no valid JSON found in LLM response.');
+    return null;
+  }
+  mkdirSync(path.dirname(file_path), {recursive: true});
+  writeFileSync(file_path, JSON.stringify(obj, null, 4), 'utf8');
+  return obj;
+}
 
+/**
+ * Fills the ptd_prompt template with an objective string.
+ * Returns the filled prompt string, ready to send to an LLM.
+ *
+ * Example:
+ *   const prompt = fill_ptd_prompt('Craft a stone pickaxe');
+ */
+export function fill_ptd_prompt(objective) {
+  const template = _read_template('../docs/prompts/ptd_prompts/ptd_prompt.md');
+  return _fill(template, {OBJECTIVE: objective});
+}
+
+/**
+ * Fills the ptd_feedback_prompt template with an objective string and a
+ * candidate graph object. Returns the filled prompt string.
+ *
+ * Example:
+ *   const prompt = fill_ptd_feedback_prompt('Craft a stone pickaxe', graph_obj);
+ */
+export function fill_ptd_feedback_prompt(objective, candidate_graph) {
+  const template =
+      _read_template('../docs/prompts/ptd_prompts/ptd_feedback_prompt.md');
+  return _fill(
+      template, {OBJECTIVE: objective, 'CANDIDATE GRAPH': candidate_graph});
+}
+
+/**
+ * Fills the ptd_refinement_prompt template with an objective string, a
+ * candidate graph object, and a validator output object.
+ * Returns the filled prompt string.
+ *
+ * Example:
+ *   const prompt = fill_ptd_refinement_prompt('Craft a stone pickaxe', graph_obj, validator_obj);
+ */
+export function fill_ptd_refinement_prompt(
+    objective, candidate_graph, validator_output) {
+  const template =
+      _read_template('../docs/prompts/ptd_prompts/ptd_refinement_prompt.md');
+  return _fill(template, {
+    OBJECTIVE: objective,
+    'CANDIDATE GRAPH': candidate_graph,
+    'VALIDATOR OUTPUT': validator_output,
+  });
+}
+
+/**
+ * Fills the scsg_prompt template with a graph object and a state object.
+ * Returns the filled prompt string.
+ *
+ * Example:
+ *   const prompt = fill_scsg_prompt(graph_obj, state_obj);
+ */
+export function fill_scsg_prompt(graph, state) {
+  const template = _read_template('../docs/prompts/scsg_prompts/scsg_prompt.md');
+  return _fill(template, {GRAPH: graph, STATE: state});
+}
+
+/**
+ * Fills the scsg_feedback_prompt template with a task prompt string and a
+ * candidate answer object. The task_prompt is typically the output of
+ * fill_scsg_prompt. Returns the filled prompt string.
+ *
+ * Example:
+ *   const task_prompt = fill_scsg_prompt(graph_obj, state_obj);
+ *   const prompt = fill_scsg_feedback_prompt(task_prompt, candidate_answer_obj);
+ */
+export function fill_scsg_feedback_prompt(task_prompt, candidate_answer) {
+  const template =
+      _read_template('../docs/prompts/scsg_prompts/scsg_feedback_prompt.md');
+  return _fill(template, {
+    'FULL TASK PROMPT WITH CONCRETE G AND S': task_prompt,
+    'CANDIDATE JSON': candidate_answer,
+  });
+}
+
+/**
+ * Fills the scsg_refiner_prompt template with a task prompt string, a
+ * previous candidate object, and an audit report object. The task_prompt
+ * is typically the output of fill_scsg_prompt. Returns the filled prompt string.
+ *
+ * Example:
+ *   const task_prompt = fill_scsg_prompt(graph_obj, state_obj);
+ *   const prompt = fill_scsg_refiner_prompt(task_prompt, previous_candidate_obj, audit_report_obj);
+ */
+export function fill_scsg_refiner_prompt(
+    task_prompt, previous_candidate, audit_report) {
+  const template =
+      _read_template('../docs/prompts/scsg_prompts/scsg_refiner_prompt.md');
+  return _fill(template, {
+    'FULL TASK PROMPT WITH CONCRETE G AND S': task_prompt,
+    'PREVIOUS CANDIDATE JSON': previous_candidate,
+    'AUDIT REPORT JSON': audit_report,
+  });
+}
+
+
+/* Helper Functions ------------------------------------------------------ */
+
+/**
+ * Reads a template file relative to this file's directory.
+ */
 function _read_template(relative_path) {
   return readFileSync(path.join(__dirname, relative_path), 'utf8');
 }
 
+/**
+ * Replaces {{KEY}} placeholders in a template string with values from inputs.
+ * String values are inserted as-is; objects are serialized with JSON.stringify.
+ * Warns if a key has no matching placeholder in the template.
+ */
 function _fill(template, inputs) {
   let result = template;
   for (const [key, value] of Object.entries(inputs)) {
