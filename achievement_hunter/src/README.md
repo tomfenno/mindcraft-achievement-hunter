@@ -4,7 +4,7 @@ Custom utility modules for the Achievement Hunter project. All functions use `sn
 
 ---
 
-## utils.js
+## prompt_utils.js
 
 ### `extract_json(str)`
 Extracts the first JSON object or array from an LLM response string. Handles arbitrary text before/after the JSON and markdown code fences.
@@ -91,6 +91,30 @@ const prompt = fill_ptd_refinement_prompt('Craft a stone pickaxe', graph_obj, va
 
 ---
 
+### `trim_graph_for_scsg(graph)`
+Trims a PTD graph down to only the fields required by the scsg prompt, reducing token usage. Strips `item_type` and `acquisition_dependency` from vertices, and `type` from edges.
+
+**Parameters**
+- `graph` — JS object (full PTD dependency graph)
+
+**Returns** — trimmed JS object with schema:
+
+```json
+{
+  "objective": "<string>",
+  "sinks": ["<vertex_id>"],
+  "vertices": [{ "id": "<string>", "qty": "<int>" }],
+  "edges": [{ "from": "<string>", "to": "<string>", "qty": "<int>", "consumed": "<bool>" }]
+}
+```
+
+**Example**
+```js
+const trimmed = trim_graph_for_scsg(ptd_graph);
+const prompt = fill_scsg_prompt(trimmed, state);
+
+---
+
 ### `enrich_subgraph(subgraph, original_graph)`
 Restores the fields stripped by `trim_graph_for_scsg` back onto a pruned subgraph, using the original PTD graph as the source of truth. Also adds a `satisfied_inputs` array to each vertex listing any dependencies that were pruned (already satisfied by the bot's current state). Matches vertices by `id` and edges by `(from, to, consumed)`. Warns if a match is not found.
 
@@ -130,43 +154,18 @@ const enriched = enrich_subgraph(subgraph, ptd_graph);
 
 ---
 
-### `trim_graph_for_scsg(graph)`
-Trims a PTD graph down to only the fields required by the scsg prompt, reducing token usage. Strips `item_type` and `acquisition_dependency` from vertices, and `type` from edges.
-
-**Parameters**
-- `graph` — JS object (full PTD dependency graph)
-
-**Returns** — trimmed JS object with schema:
-
-```json
-{
-  "objective": "<string>",
-  "sinks": ["<vertex_id>"],
-  "vertices": [{ "id": "<string>", "qty": "<int>" }],
-  "edges": [{ "from": "<string>", "to": "<string>", "qty": "<int>", "consumed": "<bool>" }]
-}
-```
-
-**Example**
-```js
-const trimmed = trim_graph_for_scsg(ptd_graph);
-const prompt = fill_scsg_prompt(trimmed, state);
-```
-
----
-
 ### `fill_scsg_prompt(graph, state)`
 Fills the `scsg_prompt` template. Used to compute a state-conditioned subgraph given a dependency graph and current bot state.
 
 **Parameters**
 - `graph` — JS object (dependency graph)
-- `state` — JS object (bot state, e.g. from `get_state`)
+- `state` — JS object (bot state, e.g. from `get_inventory_state`)
 
 **Returns** — filled prompt string
 
 **Example**
 ```js
-const state = get_state(agent);
+const state = get_inventory_state(agent);
 const prompt = fill_scsg_prompt(graph_obj, state);
 ```
 
@@ -241,8 +240,6 @@ const prompt = fill_next_task_selector_prompt(enriched, state);
 
 ---
 
-## state.js
-
 ### `get_state(agent)`
 Returns the full bot state as a plain JS object. Mirrors the `!state` command.
 
@@ -290,7 +287,7 @@ Returns the full bot state as a plain JS object. Mirrors the `!state` command.
 
 **Example**
 ```js
-import { get_state } from './src/state.js';
+import { get_state } from './src/prompt_utils.js';
 const state = get_state(agent);
 ```
 
@@ -321,6 +318,6 @@ Or if the inventory is empty:
 
 **Example**
 ```js
-import { get_inventory_state } from './src/state.js';
+import { get_inventory_state } from './src/prompt_utils.js';
 const inv = get_inventory_state(agent);
 ```
