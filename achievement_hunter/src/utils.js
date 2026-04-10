@@ -15,16 +15,16 @@ const __dirname = path.dirname(__filename);
  * import { save_json } from './src/utils.js';
  *
  * const llmOutput = await prompter.promptConvo(messages);
- * const result = save_json(llmOutput, './achievement_hunter/logs/output.json');
+ * const result = save_json(llm_output, './achievement_hunter/logs/output.json');
  */
-export function save_json(str, filePath) {
+export function save_json(str, file_path) {
   const obj = extract_json(str);
   if (obj === null) {
-    console.warn('saveJSON: no valid JSON found in LLM response.');
+    console.warn('save_json: no valid JSON found in LLM response.');
     return null;
   }
-  mkdirSync(path.dirname(filePath), {recursive: true});
-  writeFileSync(filePath, JSON.stringify(obj, null, 4), 'utf8');
+  mkdirSync(path.dirname(file_path), {recursive: true});
+  writeFileSync(file_path, JSON.stringify(obj, null, 4), 'utf8');
   return obj;
 }
 
@@ -35,21 +35,21 @@ export function fill_ptd_prompt(objective) {
   return _fill(template, {OBJECTIVE: objective});
 }
 
-export function fill_ptd_feedback_prompt(objective, candidateGraph) {
+export function fill_ptd_feedback_prompt(objective, candidate_graph) {
   const template =
       _read_template('../docs/prompts/ptd_prompts/ptd_feedback_prompt.md');
   return _fill(
-      template, {OBJECTIVE: objective, 'CANIDATE GRAPH': candidateGraph});
+      template, {OBJECTIVE: objective, 'CANDIDATE GRAPH': candidate_graph});
 }
 
 export function fill_ptd_refinement_prompt(
-    objective, candidateGraph, validatorOutput) {
+    objective, candidate_graph, validator_output) {
   const template =
       _read_template('../docs/prompts/ptd_prompts/ptd_refinement_prompt.md');
   return _fill(template, {
     OBJECTIVE: objective,
-    'CANDIDATE GRAPH': candidateGraph,
-    'VALIDATOR OUTPUT': validatorOutput,
+    'CANDIDATE GRAPH': candidate_graph,
+    'VALIDATOR OUTPUT': validator_output,
   });
 }
 
@@ -58,23 +58,23 @@ export function fill_scsg_prompt(graph, state) {
   return _fill(template, {GRAPH: graph, STATE: state});
 }
 
-export function fill_scsg_feedback_prompt(taskPrompt, candidateAnswer) {
+export function fill_scsg_feedback_prompt(task_prompt, candidate_answer) {
   const template =
       _read_template('../docs/prompts/scsg_prompts/scsg_feedback_prompt.md');
   return _fill(template, {
-    'FULL TASK PROMPT WITH CONCRETE G AND S': taskPrompt,
-    'CANDIDATE JSON': candidateAnswer,
+    'FULL TASK PROMPT WITH CONCRETE G AND S': task_prompt,
+    'CANDIDATE JSON': candidate_answer,
   });
 }
 
 export function fill_scsg_refiner_prompt(
-    taskPrompt, previousCandidate, auditReport) {
+    task_prompt, previous_candidate, audit_report) {
   const template =
       _read_template('../docs/prompts/scsg_prompts/scsg_refiner_prompt.md');
   return _fill(template, {
-    'FULL TASK PROMPT WITH CONCRETE G AND S': taskPrompt,
-    'PREVIOUS CANDIDATE JSON': previousCandidate,
-    'AUDIT REPORT JSON': auditReport,
+    'FULL TASK PROMPT WITH CONCRETE G AND S': task_prompt,
+    'PREVIOUS CANDIDATE JSON': previous_candidate,
+    'AUDIT REPORT JSON': audit_report,
   });
 }
 
@@ -124,8 +124,8 @@ export function extract_json(str) {
 
 // --- Prompt helpers ---
 
-function _read_template(relativePath) {
-  return readFileSync(path.join(__dirname, relativePath), 'utf8');
+function _read_template(relative_path) {
+  return readFileSync(path.join(__dirname, relative_path), 'utf8');
 }
 
 function _fill(template, inputs) {
@@ -134,13 +134,11 @@ function _fill(template, inputs) {
     const serialized = (value !== null && typeof value === 'object') ?
         JSON.stringify(value, null, 2) :
         String(value);
-    // handle all three placeholder syntaxes
-    result = result.replaceAll(`{INSERT ${key}}`, serialized)
-                 .replaceAll(`{{${key}}}`, serialized)
-                 .replaceAll(`<PASTE ${key}>`, serialized);
-    if (result === template) {
-      console.warn(`fillPrompt: no placeholder found for key "${key}"`);
+    const filled = result.replaceAll(`{{${key}}}`, serialized);
+    if (filled === result) {
+      console.warn(`_fill: no placeholder found for key "${key}"`);
     }
+    result = filled;
   }
   return result;
 }

@@ -1,5 +1,5 @@
 ## Objective
-`O = "{{OBJECTIVE}}"`
+`O = "Smelt an iron ingot"`
 
 ---
 

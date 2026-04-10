@@ -1,0 +1,34 @@
+{
+  "verdict": "fail",
+  "definite_issues": [
+    {
+      "id": "structure_missing_vertex_any_plank",
+      "severity": "high",
+      "rule_area": "structure",
+      "message": "Several edges reference a non-existent vertex id `any_plank`.",
+      "evidence": "The `vertices` array contains `spruce_plank` but no vertex with `id: \"any_plank\"`. Edges use `from: \"any_plank\"` for `iron_ingot`, `wooden_pickaxe`, `crafting_table`, `stick`, and as the target of `any_log -> any_plank`.",
+      "suggested_fix": "Add a vertex with `id: \"any_plank\"` and remove or rename the mismatched `spruce_plank` vertex so all edge endpoints reference an existing vertex."
+    },
+    {
+      "id": "objective_incomplete_fuel_vertex_missing",
+      "severity": "high",
+      "rule_area": "objective",
+      "message": "The smelting prerequisite set is incomplete because the fuel dependency is not backed by a valid inventory-item vertex.",
+      "evidence": "The graph models a `fuel_input` edge `any_plank -> iron_ingot`, but `any_plank` does not exist in `vertices`, so the required fuel item is not actually represented as a valid vertex.",
+      "suggested_fix": "Represent the fuel item as a valid vertex that matches the edge endpoint, such as `any_plank`."
+    }
+  ],
+  "possible_issues": [
+    {
+      "rule_area": "output",
+      "message": "The `objective` string may not exactly preserve the original objective text.",
+      "evidence": "The original objective is `Smelt an iron ingot`, while the graph stores `\"{{Smelt an iron ingot}}\"`. The spec requires the top-level key but does not explicitly validate the exact string contents."
+    },
+    {
+      "rule_area": "vertex",
+      "message": "The plank vertex may be using the wrong abstraction level.",
+      "evidence": "The graph includes `spruce_plank`, but all recipe edges use `any_plank`. Under the abstract resource convention, `any_` should be used when grouped variants are interchangeable for the recipe."
+    }
+  ],
+  "summary": "The graph has the right overall shape for smelting one iron ingot, but it fails validation because multiple edges reference `any_plank` without a corresponding vertex, which breaks graph integrity and leaves the fuel prerequisite invalidly modeled."
+}

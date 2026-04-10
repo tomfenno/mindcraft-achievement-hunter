@@ -186,16 +186,230 @@ Examples:
 - Do not mark a graph wrong solely because another valid graph could also satisfy the objective
 
 OBJECTIVE:
-`{{OBJECTIVE}}`
+`Smelt an iron ingot`
 
 
 CURRENT CANDIDATE GRAPH:
 ```json
-{{CANDIDATE GRAPH}}
+{
+  "objective": "{{Smelt an iron ingot}}",
+  "sinks": [
+    "iron_ingot"
+  ],
+  "vertices": [
+    {
+      "id": "iron_ingot",
+      "qty": 1,
+      "item_type": "item",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "raw_iron",
+      "qty": 1,
+      "item_type": "resource",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "furnace",
+      "qty": 1,
+      "item_type": "workstation",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "stone_pickaxe",
+      "qty": 1,
+      "item_type": "tool",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "cobblestone",
+      "qty": 11,
+      "item_type": "resource",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "wooden_pickaxe",
+      "qty": 1,
+      "item_type": "tool",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "crafting_table",
+      "qty": 1,
+      "item_type": "workstation",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "stick",
+      "qty": 4,
+      "item_type": "item",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "any_plank",
+      "qty": 12,
+      "item_type": "item",
+      "acquisition_dependency": "none"
+    },
+    {
+      "id": "any_log",
+      "qty": 3,
+      "item_type": "resource",
+      "acquisition_dependency": "none"
+    }
+  ],
+  "edges": [
+    {
+      "from": "raw_iron",
+      "to": "iron_ingot",
+      "type": "smelting_input",
+      "qty": 1,
+      "consumed": true
+    },
+    {
+      "from": "any_plank",
+      "to": "iron_ingot",
+      "type": "fuel_input",
+      "qty": 1,
+      "consumed": true
+    },
+    {
+      "from": "furnace",
+      "to": "iron_ingot",
+      "type": "workstation_dependency",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "stone_pickaxe",
+      "to": "raw_iron",
+      "type": "tool_dependency",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "cobblestone",
+      "to": "furnace",
+      "type": "crafting_input",
+      "qty": 8,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "furnace",
+      "type": "workstation_dependency",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "cobblestone",
+      "to": "stone_pickaxe",
+      "type": "crafting_input",
+      "qty": 3,
+      "consumed": true
+    },
+    {
+      "from": "stick",
+      "to": "stone_pickaxe",
+      "type": "crafting_input",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "stone_pickaxe",
+      "type": "workstation_dependency",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "wooden_pickaxe",
+      "to": "cobblestone",
+      "type": "tool_dependency",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "any_plank",
+      "to": "wooden_pickaxe",
+      "type": "crafting_input",
+      "qty": 3,
+      "consumed": true
+    },
+    {
+      "from": "stick",
+      "to": "wooden_pickaxe",
+      "type": "crafting_input",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "crafting_table",
+      "to": "wooden_pickaxe",
+      "type": "workstation_dependency",
+      "qty": 1,
+      "consumed": false
+    },
+    {
+      "from": "any_plank",
+      "to": "crafting_table",
+      "type": "crafting_input",
+      "qty": 4,
+      "consumed": true
+    },
+    {
+      "from": "any_plank",
+      "to": "stick",
+      "type": "crafting_input",
+      "qty": 2,
+      "consumed": true
+    },
+    {
+      "from": "any_log",
+      "to": "any_plank",
+      "type": "crafting_input",
+      "qty": 3,
+      "consumed": true
+    }
+  ]
+}
 ```
 
 VALIDATOR OUTPUT:
 
 ```json
-{{VALIDATOR OUTPUT}}
+{
+  "verdict": "fail",
+  "definite_issues": [
+    {
+      "id": "structure_missing_vertex_any_plank",
+      "severity": "high",
+      "rule_area": "structure",
+      "message": "Several edges reference a non-existent vertex id `any_plank`.",
+      "evidence": "The `vertices` array contains `spruce_plank` but no vertex with `id: \"any_plank\"`. Edges use `from: \"any_plank\"` for `iron_ingot`, `wooden_pickaxe`, `crafting_table`, `stick`, and as the target of `any_log -> any_plank`.",
+      "suggested_fix": "Add a vertex with `id: \"any_plank\"` and remove or rename the mismatched `spruce_plank` vertex so all edge endpoints reference an existing vertex."
+    },
+    {
+      "id": "objective_incomplete_fuel_vertex_missing",
+      "severity": "high",
+      "rule_area": "objective",
+      "message": "The smelting prerequisite set is incomplete because the fuel dependency is not backed by a valid inventory-item vertex.",
+      "evidence": "The graph models a `fuel_input` edge `any_plank -> iron_ingot`, but `any_plank` does not exist in `vertices`, so the required fuel item is not actually represented as a valid vertex.",
+      "suggested_fix": "Represent the fuel item as a valid vertex that matches the edge endpoint, such as `any_plank`."
+    }
+  ],
+  "possible_issues": [
+    {
+      "rule_area": "output",
+      "message": "The `objective` string may not exactly preserve the original objective text.",
+      "evidence": "The original objective is `Smelt an iron ingot`, while the graph stores `\"{{Smelt an iron ingot}}\"`. The spec requires the top-level key but does not explicitly validate the exact string contents."
+    },
+    {
+      "rule_area": "vertex",
+      "message": "The plank vertex may be using the wrong abstraction level.",
+      "evidence": "The graph includes `spruce_plank`, but all recipe edges use `any_plank`. Under the abstract resource convention, `any_` should be used when grouped variants are interchangeable for the recipe."
+    }
+  ],
+  "summary": "The graph has the right overall shape for smelting one iron ingot, but it fails validation because multiple edges reference `any_plank` without a corresponding vertex, which breaks graph integrity and leaves the fuel prerequisite invalidly modeled."
+}
 ```

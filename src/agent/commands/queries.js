@@ -1,11 +1,11 @@
 import {load} from 'cheerio';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
 import * as mc from '../../utils/mcdata.js';
 import convoManager from '../conversation.js';
 import * as world from '../library/world.js';
 import {checkBlueprint, checkLevelBlueprint} from '../tasks/construction_tasks.js';
-import { save_json } from '../../../achievement_hunter/src/utils.js';
+import { save_json, fill_ptd_prompt, fill_ptd_feedback_prompt, fill_ptd_refinement_prompt, fill_scsg_prompt, fill_scsg_feedback_prompt, fill_scsg_refiner_prompt } from '../../../achievement_hunter/src/utils.js';
 
 import {getCommandDocs} from './index.js';
 
@@ -475,6 +475,86 @@ export const queryList = [
       };
 
       return JSON.stringify(state, null, 2);
+    }
+  },
+  {
+    name: '!testFillPtdPrompt',
+    description: 'Test: fills ptd_prompt with example objective and saves output.',
+    perform: function(_agent) {
+      const input_dir = 'achievement_hunter/fill_prompt/example_inputs';
+      const objective = readFileSync(`${input_dir}/objective.txt`, 'utf8').trim();
+      const result = fill_ptd_prompt(objective);
+      writeFileSync('achievement_hunter/fill_prompt/outputs/ptd_prompt.md', result, 'utf8');
+      return '!testFillPtdPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/ptd_prompt.md';
+    }
+  },
+  {
+    name: '!testFillPtdFeedbackPrompt',
+    description: 'Test: fills ptd_feedback_prompt with example inputs and saves output.',
+    perform: function(_agent) {
+      const input_dir = 'achievement_hunter/fill_prompt/example_inputs';
+      const objective = readFileSync(`${input_dir}/objective.txt`, 'utf8').trim();
+      const candidate_graph = JSON.parse(readFileSync(`${input_dir}/candidate_graph.json`, 'utf8'));
+      const result = fill_ptd_feedback_prompt(objective, candidate_graph);
+      writeFileSync('achievement_hunter/fill_prompt/outputs/ptd_feedback_prompt.md', result, 'utf8');
+      return '!testFillPtdFeedbackPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/ptd_feedback_prompt.md';
+    }
+  },
+  {
+    name: '!testFillPtdRefinementPrompt',
+    description: 'Test: fills ptd_refinement_prompt with example inputs and saves output.',
+    perform: function(_agent) {
+      const input_dir = 'achievement_hunter/fill_prompt/example_inputs';
+      const objective = readFileSync(`${input_dir}/objective.txt`, 'utf8').trim();
+      const candidate_graph = JSON.parse(readFileSync(`${input_dir}/candidate_graph.json`, 'utf8'));
+      const validator_output = JSON.parse(readFileSync(`${input_dir}/validator_output.json`, 'utf8'));
+      const result = fill_ptd_refinement_prompt(objective, candidate_graph, validator_output);
+      writeFileSync('achievement_hunter/fill_prompt/outputs/ptd_refinement_prompt.md', result, 'utf8');
+      return '!testFillPtdRefinementPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/ptd_refinement_prompt.md';
+    }
+  },
+  {
+    name: '!testFillScsgPrompt',
+    description: 'Test: fills scsg_prompt with example graph and state and saves output.',
+    perform: function(_agent) {
+      const input_dir = 'achievement_hunter/fill_prompt/example_inputs';
+      const state_path = 'achievement_hunter/docs/rollouts/acquire_hardware_platonic/states/state3.json';
+      const graph = JSON.parse(readFileSync(`${input_dir}/candidate_graph.json`, 'utf8'));
+      const state = JSON.parse(readFileSync(state_path, 'utf8'));
+      const result = fill_scsg_prompt(graph, state);
+      writeFileSync('achievement_hunter/fill_prompt/outputs/scsg_prompt.md', result, 'utf8');
+      return '!testFillScsgPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/scsg_prompt.md';
+    }
+  },
+  {
+    name: '!testFillScsgFeedbackPrompt',
+    description: 'Test: fills scsg_feedback_prompt using scsg_prompt output as task_prompt and saves output.',
+    perform: function(_agent) {
+      const input_dir = 'achievement_hunter/fill_prompt/example_inputs';
+      const state_path = 'achievement_hunter/docs/rollouts/acquire_hardware_platonic/states/state3.json';
+      const graph = JSON.parse(readFileSync(`${input_dir}/candidate_graph.json`, 'utf8'));
+      const state = JSON.parse(readFileSync(state_path, 'utf8'));
+      const task_prompt = fill_scsg_prompt(graph, state);
+      const candidate_answer = JSON.parse(readFileSync(`${input_dir}/validator_output.json`, 'utf8'));
+      const result = fill_scsg_feedback_prompt(task_prompt, candidate_answer);
+      writeFileSync('achievement_hunter/fill_prompt/outputs/scsg_feedback_prompt.md', result, 'utf8');
+      return '!testFillScsgFeedbackPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/scsg_feedback_prompt.md';
+    }
+  },
+  {
+    name: '!testFillScsgRefinerPrompt',
+    description: 'Test: fills scsg_refiner_prompt using scsg_prompt output as task_prompt and saves output.',
+    perform: function(_agent) {
+      const input_dir = 'achievement_hunter/fill_prompt/example_inputs';
+      const state_path = 'achievement_hunter/docs/rollouts/acquire_hardware_platonic/states/state3.json';
+      const graph = JSON.parse(readFileSync(`${input_dir}/candidate_graph.json`, 'utf8'));
+      const state = JSON.parse(readFileSync(state_path, 'utf8'));
+      const task_prompt = fill_scsg_prompt(graph, state);
+      const previous_candidate = JSON.parse(readFileSync(`${input_dir}/validator_output.json`, 'utf8'));
+      const audit_report = JSON.parse(readFileSync(`${input_dir}/validator_output.json`, 'utf8'));
+      const result = fill_scsg_refiner_prompt(task_prompt, previous_candidate, audit_report);
+      writeFileSync('achievement_hunter/fill_prompt/outputs/scsg_refiner_prompt.md', result, 'utf8');
+      return '!testFillScsgRefinerPrompt succeeded: output saved to achievement_hunter/fill_prompt/outputs/scsg_refiner_prompt.md';
     }
   },
   {
