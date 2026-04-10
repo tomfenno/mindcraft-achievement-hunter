@@ -260,6 +260,17 @@ export class Prompter {
         return '';
     }
 
+    async promptStructured(prompt, tag = 'structured') {
+        await this.checkCooldown();
+        let resp = await this.chat_model.sendRequest([], prompt);
+        await this._saveLog(prompt, [], resp, tag);
+        if (resp?.includes('</think>')) {
+            const [_, afterThink] = resp.split('</think>');
+            resp = afterThink;
+        }
+        return resp;
+    }
+
     async promptCoding(messages) {
         if (this.awaiting_coding) {
             console.warn('Already awaiting coding response, returning no response.');

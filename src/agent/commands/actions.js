@@ -283,7 +283,7 @@ export const actionsList = [
         },
         perform: runAsAction(async (agent, item_name, num) => {
             let success = await skills.smeltItem(agent.bot, item_name, num);
-            if (success) {
+            if (success && !agent.structured_prompting_loop?.isActive()) {
                 setTimeout(() => {
                     agent.cleanKill('Safely restarting to update inventory.');
                 }, 500);
@@ -381,6 +381,24 @@ export const actionsList = [
         perform: async function (agent) {
             agent.self_prompter.stop();
             return 'Self-prompting stopped.';
+        }
+    },
+    {
+        name: '!splGoal',
+        description: 'Set a goal prompt to work toward using the structured prompting loop prototype.',
+        params: {
+            'objective': { type: 'string', description: 'The structured prompting objective.' },
+        },
+        perform: async function(agent, objective) {
+            return await agent.structured_prompting_loop.start(objective);
+        }
+    },
+    {
+        name: '!endSplGoal',
+        description: 'Stop the structured prompting loop prototype and the current action.',
+        perform: async function(agent) {
+            await agent.structured_prompting_loop.stop();
+            return 'Structured prompting loop stopped.';
         }
     },
     {

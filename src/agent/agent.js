@@ -17,6 +17,7 @@ import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
 import { speak } from './speak.js';
 import { log, validateNameFormat, handleDisconnection } from './connection_handler.js';
+import { StructuredPromptingLoop } from '../../achievement_hunter/src/structured_prompting_loop.js';
 
 export class Agent {
     async start(load_mem=false, init_message=null, count_id=0) {
@@ -44,6 +45,7 @@ export class Agent {
         this.npc = new NPCContoller(this);
         this.memory_bank = new MemoryBank();
         this.self_prompter = new SelfPrompter(this);
+        this.structured_prompting_loop = new StructuredPromptingLoop(this);
         convoManager.initAgent(this);
         await this.prompter.initExamples();
 
@@ -520,6 +522,7 @@ export class Agent {
     async update(delta) {
         await this.bot.modes.update();
         this.self_prompter.update(delta);
+        this.structured_prompting_loop.update(delta);
         await this.checkTaskDone();
     }
 
