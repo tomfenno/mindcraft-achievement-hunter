@@ -187,7 +187,6 @@ export class GPT {
         console.log("Max refinement rounds reached.");
         return { finalResult: r, transcript: transcript, totalRounds: n };
     }
-
 }
 
 const sendAudioRequest = async (text, model, voice, url) => {

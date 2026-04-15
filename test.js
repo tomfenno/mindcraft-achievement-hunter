@@ -22,7 +22,7 @@ async function runTest() {
     try {
         // 4. Run your loop
         console.log("Sending initial request...");
-        const finalResult = await llm.sendRefinedRequest(turns, systemMessage, refinementPrompts, 3);
+        const finalResult = await llm.sendRefinedRequest(turns, systemMessage, refinementPrompts, 3); // May need to increase to beyond 3
         
         console.log("\n==================================");
         console.log("TEST COMPLETE. FINAL REFINED OUTPUT:");
