@@ -1,0 +1,191 @@
+{
+  "objective": "demo live objective",
+  "status": "completed",
+  "started_at": "2026-04-26T08:08:46.361Z",
+  "stages": [
+    {
+      "timestamp": "2026-04-26T08:08:46.366Z",
+      "elapsed": "0s",
+      "stage": "PTD",
+      "raw": "{\"objective\":\"demo live objective\",\"sinks\":[\"oak_log\"],\"vertices\":[{\"id\":\"oak_log\",\"qty\":3,\"item_type\":\"resource\",\"acquisition_dependency\":\"none\"}],\"edges\":[]}",
+      "parsed": {
+        "objective": "demo live objective",
+        "sinks": [
+          "oak_log"
+        ],
+        "vertices": [
+          {
+            "id": "oak_log",
+            "qty": 3,
+            "item_type": "resource",
+            "acquisition_dependency": "none"
+          }
+        ],
+        "edges": []
+      },
+      "meta": {
+        "latency_ms": 0,
+        "error": null,
+        "source": "llm",
+        "stage": "generate",
+        "round": 0
+      }
+    },
+    {
+      "timestamp": "2026-04-26T08:08:46.372Z",
+      "elapsed": "0s",
+      "stage": "PTD",
+      "raw": "{\"verdict\":\"fail\",\"definite_issues\":[\"Missing crafting table workstation node\"],\"possible_issues\":[],\"summary\":\"Need an explicit workstation vertex.\"}",
+      "parsed": {
+        "verdict": "fail",
+        "definite_issues": [
+          "Missing crafting table workstation node"
+        ],
+        "possible_issues": [],
+        "summary": "Need an explicit workstation vertex."
+      },
+      "meta": {
+        "latency_ms": 0,
+        "error": null,
+        "source": "llm",
+        "stage": "validate",
+        "round": 0
+      }
+    },
+    {
+      "timestamp": "2026-04-26T08:08:46.375Z",
+      "elapsed": "0s",
+      "stage": "PTD",
+      "raw": "{\"objective\":\"demo live objective\",\"sinks\":[\"oak_log\"],\"vertices\":[{\"id\":\"oak_log\",\"qty\":3,\"item_type\":\"resource\",\"acquisition_dependency\":\"none\"},{\"id\":\"crafting_table\",\"qty\":1,\"item_type\":\"workstation\",\"acquisition_dependency\":\"none\"}],\"edges\":[]}",
+      "parsed": {
+        "objective": "demo live objective",
+        "sinks": [
+          "oak_log"
+        ],
+        "vertices": [
+          {
+            "id": "oak_log",
+            "qty": 3,
+            "item_type": "resource",
+            "acquisition_dependency": "none"
+          },
+          {
+            "id": "crafting_table",
+            "qty": 1,
+            "item_type": "workstation",
+            "acquisition_dependency": "none"
+          }
+        ],
+        "edges": []
+      },
+      "meta": {
+        "latency_ms": 0,
+        "error": null,
+        "source": "llm",
+        "stage": "refine",
+        "round": 1
+      }
+    },
+    {
+      "timestamp": "2026-04-26T08:08:46.379Z",
+      "elapsed": "0s",
+      "stage": "PTD",
+      "raw": "{\"verdict\":\"pass\",\"definite_issues\":[],\"possible_issues\":[],\"summary\":\"Looks good.\"}",
+      "parsed": {
+        "verdict": "pass",
+        "definite_issues": [],
+        "possible_issues": [],
+        "summary": "Looks good."
+      },
+      "meta": {
+        "latency_ms": 0,
+        "error": null,
+        "source": "llm",
+        "stage": "validate",
+        "round": 1
+      }
+    },
+    {
+      "timestamp": "2026-04-26T08:08:46.382Z",
+      "elapsed": "0s",
+      "stage": "SCSG",
+      "raw": "[deterministic]",
+      "parsed": {
+        "r": 1,
+        "s": [
+          "oak_log"
+        ],
+        "final": {
+          "vertices": [
+            {
+              "id": "oak_log",
+              "qty": 3,
+              "item_type": "resource",
+              "acquisition_dependency": "none"
+            },
+            {
+              "id": "crafting_table",
+              "qty": 1,
+              "item_type": "workstation",
+              "acquisition_dependency": "none"
+            }
+          ],
+          "edges": []
+        }
+      }
+    },
+    {
+      "timestamp": "2026-04-26T08:08:46.384Z",
+      "elapsed": "0s",
+      "stage": "CANDIDATES",
+      "candidates": [
+        {
+          "id": "oak_log",
+          "qty": 3,
+          "item_type": "resource",
+          "acquisition_dependency": "none",
+          "satisfied_inputs": [],
+          "source_hint": "oak_log",
+          "source_kind": "block",
+          "grounded_nearby_source": "oak_log"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-04-26T08:08:46.385Z",
+      "elapsed": "0s",
+      "stage": "NTS",
+      "raw": "[deterministic]",
+      "parsed": {
+        "target_item": "oak_log",
+        "qty": 3,
+        "action_type": "collect",
+        "parameters": {
+          "source_block": "oak_log"
+        }
+      },
+      "meta": {
+        "source": "deterministic"
+      }
+    },
+    {
+      "timestamp": "2026-04-26T08:08:46.387Z",
+      "elapsed": "0s",
+      "stage": "AM",
+      "attempt": 1,
+      "raw": "!collectBlocks(\"oak_log\", 3)",
+      "state": {
+        "inventory": {},
+        "nearby_blocks": [
+          "oak_log"
+        ]
+      },
+      "meta": {
+        "source": "deterministic"
+      }
+    }
+  ],
+  "completed_at": "2026-04-26T08:08:46.389Z",
+  "total_elapsed": "0s",
+  "completion_reason": "demo completed"
+}
