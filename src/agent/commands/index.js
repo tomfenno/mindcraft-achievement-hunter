@@ -5,24 +5,52 @@ import {emit_benchmark_event, start_benchmark_span} from '../../logging/benchmar
 
 let suppressNoDomainWarning = true;
 
-const commandList = queryList.concat(actionsList);
+const commandList = [];
 const commandMap = {};
-for (let command of commandList) {
+let registryInitialized = false;
+
+const helpCommand = {
+    name: '!help',
+    description: 'Lists all available commands and their descriptions.',
+    perform: async function (agent) {
+        return getCommandDocs(agent);
+    }
+};
+
+function addCommand(command) {
     commandMap[command.name] = command;
+    commandList.push(command);
+}
+
+function ensureRegistryInitialized() {
+    if (registryInitialized) {
+        return;
+    }
+    registryInitialized = true;
+
+    for (let command of queryList) {
+        addCommand(command);
+    }
+    for (let command of actionsList) {
+        addCommand(command);
+    }
+    addCommand(helpCommand);
 }
 
 export function getCommand(name) {
+    ensureRegistryInitialized();
     return commandMap[name];
 }
 
 export function registerCommands(commands) {
+    ensureRegistryInitialized();
     for (const command of commands) {
-        commandMap[command.name] = command;
-        commandList.push(command);
+        addCommand(command);
     }
 }
 
 export function blacklistCommands(commands) {
+    ensureRegistryInitialized();
     const unblockable = ['!stop', '!stats', '!inventory', '!goal'];
     for (let command_name of commands) {
         if (unblockable.includes(command_name)){
@@ -45,6 +73,7 @@ export function containsCommand(message) {
 }
 
 export function commandExists(commandName) {
+    ensureRegistryInitialized();
     if (!commandName.startsWith("!"))
         commandName = "!" + commandName;
     return commandMap[commandName] !== undefined;
@@ -103,6 +132,7 @@ function checkInInterval(number, lowerBound, upperBound, endpointType) {
  * @returns {string | Object}
  */
 export function parseCommandMessage(message) {
+    ensureRegistryInitialized();
     const commandMatch = message.match(commandRegex);
     if (!commandMatch) return `Command is incorrectly formatted`;
 
@@ -190,6 +220,7 @@ export function truncCommandMessage(message) {
 }
 
 export function isAction(name) {
+    ensureRegistryInitialized();
     return actionsList.find(action => action.name === name) !== undefined;
 }
 
@@ -298,6 +329,7 @@ export async function executeCommand(agent, message) {
 }
 
 export function getCommandDocs(agent) {
+    ensureRegistryInitialized();
     const typeTranslations = {
         //This was added to keep the prompt the same as before type checks were implemented.
         //If the language model is giving invalid inputs changing this might help.

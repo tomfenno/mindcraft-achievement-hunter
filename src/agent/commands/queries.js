@@ -1,6 +1,5 @@
 import * as world from '../library/world.js';
 import * as mc from '../../utils/mcdata.js';
-import { getCommandDocs } from './index.js';
 import convoManager from '../conversation.js';
 import { checkLevelBlueprint, checkBlueprint } from '../tasks/construction_tasks.js';
 import { load } from 'cheerio';
@@ -335,13 +334,6 @@ export const queryList = [
                 console.error("Error fetching or parsing HTML:", error);
                 return `The following error occurred: ${error}`
               }
-        }
-    },
-    {
-        name: '!help',
-        description: 'Lists all available commands and their descriptions.',
-        perform: async function (agent) {
-            return getCommandDocs(agent);
         }
     },
 ];
