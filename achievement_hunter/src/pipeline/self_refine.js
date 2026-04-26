@@ -48,6 +48,11 @@ export async function generate_self_refined_ptd(
       resolve_stage_models(models, opts.fail_on_missing_models);
   if (!resolved_models.ok) {
     safe_log_complete(log, resolved_models.failure_reason);
+    safe_benchmark_event(log, 'ptd_self_refine_completed', {
+      accepted: false,
+      rounds_used: 0,
+      failure_reason: resolved_models.failure_reason,
+    });
     return make_failure_result(
         {failure_reason: resolved_models.failure_reason});
   }
@@ -56,6 +61,10 @@ export async function generate_self_refined_ptd(
   const {generator_model, validator_model, refiner_model} = resolved_models;
 
   spl.log('Building PTD via SELF-REFINE for:', task_name);
+  safe_benchmark_event(log, 'ptd_self_refine_started', {
+    max_rounds: opts.max_rounds,
+    resumed_from_checkpoint: false,
+  });
 
   const generation = await run_generation_stage({
     model: generator_model,
@@ -67,6 +76,11 @@ export async function generate_self_refined_ptd(
 
   if (!generation.ok) {
     safe_log_complete(log, generation.failure_reason);
+    safe_benchmark_event(log, 'ptd_self_refine_completed', {
+      accepted: false,
+      rounds_used: 0,
+      failure_reason: generation.failure_reason,
+    });
     return make_failure_result({
       failure_reason: generation.failure_reason,
       trace,
@@ -89,6 +103,11 @@ export async function generate_self_refined_ptd(
 
     if (!validation.ok) {
       safe_log_complete(log, validation.failure_reason);
+      safe_benchmark_event(log, 'ptd_self_refine_completed', {
+        accepted: false,
+        rounds_used: round,
+        failure_reason: validation.failure_reason,
+      });
       return make_failure_result({
         failure_reason: validation.failure_reason,
         trace,
@@ -103,6 +122,10 @@ export async function generate_self_refined_ptd(
       persist_final_graph_if_enabled(current_graph, task_name, opts);
       const success_message = `PTD accepted after validation round ${round}`;
       spl.log(success_message);
+      safe_benchmark_event(log, 'ptd_self_refine_completed', {
+        accepted: true,
+        rounds_used: round,
+      });
 
       return {
         ok: true,
@@ -119,6 +142,11 @@ export async function generate_self_refined_ptd(
           `PTD failed validation after ${opts.max_rounds} refinement rounds`;
       spl.error(failure_reason);
       safe_log_complete(log, failure_reason);
+      safe_benchmark_event(log, 'ptd_self_refine_completed', {
+        accepted: false,
+        rounds_used: round,
+        failure_reason,
+      });
 
       return make_failure_result({
         failure_reason,
@@ -140,6 +168,11 @@ export async function generate_self_refined_ptd(
 
     if (!refinement.ok) {
       safe_log_complete(log, refinement.failure_reason);
+      safe_benchmark_event(log, 'ptd_self_refine_completed', {
+        accepted: false,
+        rounds_used: round + 1,
+        failure_reason: refinement.failure_reason,
+      });
       return make_failure_result({
         failure_reason: refinement.failure_reason,
         trace,
@@ -154,6 +187,11 @@ export async function generate_self_refined_ptd(
   const failure_reason = 'Unexpected SELF-REFINE termination';
   spl.error(failure_reason);
   safe_log_complete(log, failure_reason);
+  safe_benchmark_event(log, 'ptd_self_refine_completed', {
+    accepted: false,
+    rounds_used: opts.max_rounds,
+    failure_reason,
+  });
 
   return make_failure_result({
     failure_reason,
@@ -182,6 +220,15 @@ function resume_from_existing_graph(task_name, existing_graph, log) {
   spl.log('Resuming from checkpoint, skipping PTD self-refine for:', task_name);
   safe_log_ptd(log, '[loaded from checkpoint]', existing_graph, {
     source: 'checkpoint',
+  });
+  safe_benchmark_event(log, 'ptd_self_refine_started', {
+    max_rounds: 0,
+    resumed_from_checkpoint: true,
+  });
+  safe_benchmark_event(log, 'ptd_self_refine_completed', {
+    accepted: true,
+    rounds_used: 0,
+    resumed_from_checkpoint: true,
   });
 
   return {
@@ -351,6 +398,15 @@ async function run_stage({
     stage,
     round,
   });
+  safe_benchmark_event(log, 'llm_stage_timed', {
+    llm_stage: stage,
+    round,
+    model_name: model?.model_name ?? null,
+    latency_ms: call.latency_ms,
+    prompt_length_chars: prompt.length,
+    success: error == null,
+    error,
+  });
 
   if (call.response === null) {
     spl.error(null_response_error);
@@ -454,6 +510,16 @@ function safe_log_complete(log, reason) {
     }
   } catch (error) {
     spl.warn('log.complete failed:', error);
+  }
+}
+
+function safe_benchmark_event(log, type, data = {}) {
+  try {
+    if (log && typeof log.benchmark_event === 'function') {
+      log.benchmark_event(type, data);
+    }
+  } catch (error) {
+    spl.warn('log.benchmark_event failed:', error);
   }
 }
 

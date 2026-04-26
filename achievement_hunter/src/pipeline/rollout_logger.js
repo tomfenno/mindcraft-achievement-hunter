@@ -395,7 +395,7 @@ const live_writer = {
 /**
  * Creates a new rollout log file for a single structured loop run.
  */
-export function createRolloutLogger(objective) {
+export function createRolloutLogger(objective, benchmark_logger = null) {
   mkdirSync(LIVE_DIR, {recursive: true});
 
   const started_at = iso_now();
@@ -431,8 +431,20 @@ export function createRolloutLogger(objective) {
     completion: null,
   };
 
+  function benchmark_event(type, data = {}) {
+    if (!benchmark_logger || typeof benchmark_logger.event !== 'function') {
+      return;
+    }
+
+    benchmark_logger.event(type, {
+      objective,
+      ...data,
+    });
+  }
+
   live_writer.remove_file(LIVE_FILE.LEGACY_DASHBOARD);
   live_writer.write_file(LIVE_FILE.PTD_REFINEMENT, PLACEHOLDER.PTD_REFINEMENT);
+  benchmark_event('spl_rollout_started');
 
   // ── Private helpers
   // ───────────────────────────────────────────────────────────
@@ -493,6 +505,7 @@ export function createRolloutLogger(objective) {
   return {
     rollout_dir,
     objective,
+    benchmark_event,
 
     ptd(raw, parsed, meta = {}) {
       record_stage({
@@ -523,6 +536,16 @@ export function createRolloutLogger(objective) {
             stage_renderer.ptd_refinement(
                 live_state.ptd_refinement_rounds, objective));
 
+        benchmark_event('ptd_stage_result', {
+          stage_name: meta.stage,
+          stage_source: meta.source ?? SOURCE.LLM,
+          round: meta.round ?? 0,
+          latency_ms: meta.latency_ms ?? null,
+          accepted:
+              meta.stage === 'validate' ? parsed?.verdict === 'pass' : null,
+          error: meta.error ?? null,
+        });
+
         if (meta.stage === 'validate') return;
       }
 
@@ -536,6 +559,14 @@ export function createRolloutLogger(objective) {
         source: meta.source ?? SOURCE.LLM,
       };
 
+      if (!meta.stage) {
+        benchmark_event('ptd_result', {
+          stage_source: meta.source ?? SOURCE.LLM,
+          latency_ms: meta.latency_ms ?? null,
+          error: meta.error ?? null,
+        });
+      }
+
       render_live();
     },
 
@@ -547,12 +578,22 @@ export function createRolloutLogger(objective) {
         ...(state && {state}),
       });
       live_state.scsg_result = parsed || null;
+      benchmark_event('scsg_computed', {
+        source: raw,
+        status: parsed?.r === 2 ? 'complete' : 'continue',
+        sink_count: parsed?.s?.length ?? 0,
+        vertex_count: parsed?.final?.vertices?.length ?? 0,
+        edge_count: parsed?.final?.edges?.length ?? 0,
+      });
       render_live();
     },
 
     candidates(candidates) {
       record_stage({stage: STAGE.CANDIDATES, candidates});
       live_state.candidates = candidates;
+      benchmark_event('candidates_computed', {
+        candidate_count: candidates?.length ?? 0,
+      });
       render_live();
     },
 
@@ -565,6 +606,11 @@ export function createRolloutLogger(objective) {
       });
 
       live_state.nts_result = {raw, parsed};
+      benchmark_event('nts_selected', {
+        source: meta.source ?? SOURCE.LLM,
+        raw,
+        task: parsed,
+      });
 
       render_live();
     },
@@ -584,6 +630,12 @@ export function createRolloutLogger(objective) {
         parsed: extract_json(raw),
         source: meta.source ?? SOURCE.LLM,
       });
+      benchmark_event('am_action_generated', {
+        source: meta.source ?? SOURCE.LLM,
+        attempt,
+        raw,
+        action: extract_json(raw),
+      });
 
       render_live();
     },
@@ -593,6 +645,7 @@ export function createRolloutLogger(objective) {
 
       live_state.am_history.at(-1).warning = message;
       record_stage({stage: STAGE.AM_WARN, message});
+      benchmark_event('am_warning', {message});
       render_live();
     },
 
@@ -608,6 +661,11 @@ export function createRolloutLogger(objective) {
         reason,
         total_elapsed,
       };
+
+      benchmark_event('spl_rollout_completed', {
+        reason,
+        total_elapsed,
+      });
 
       flush_rollout();
       render_live();

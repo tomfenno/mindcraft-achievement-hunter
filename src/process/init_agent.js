@@ -1,5 +1,6 @@
 import { Agent } from '../agent/agent.js';
 import { serverProxy } from '../agent/mindserver_proxy.js';
+import {attach_benchmark_logger} from '../logging/attach_benchmark_logger.js';
 import yargs from 'yargs';
 
 const args = process.argv.slice(2);
@@ -43,6 +44,12 @@ const argv = yargs(args)
         await serverProxy.connect(argv.name, argv.port);
         console.log('Starting agent');
         const agent = new Agent();
+        attach_benchmark_logger(agent, {
+            agentName: argv.name,
+            profileName: argv.name,
+            agentKind: 'baseline',
+            countId: argv.count_id
+        });
         serverProxy.setAgent(agent);
         await agent.start(argv.load_memory, argv.init_message, argv.count_id);
     } catch (error) {

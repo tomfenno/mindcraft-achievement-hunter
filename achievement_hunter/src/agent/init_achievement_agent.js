@@ -6,6 +6,7 @@
 import yargs from 'yargs';
 
 import {serverProxy} from '../../../src/agent/mindserver_proxy.js';
+import {attach_benchmark_logger} from '../../../src/logging/attach_benchmark_logger.js';
 
 import {AchievementAgent} from './achievement_agent.js';
 
@@ -40,6 +41,12 @@ async function main() {
 
   console.log('Starting achievement agent');
   const agent = new AchievementAgent();
+  attach_benchmark_logger(agent, {
+    agentName: argv.name,
+    profileName: argv.name,
+    agentKind: 'achievement_hunter',
+    countId: argv.count_id,
+  });
   serverProxy.setAgent(agent);
   await agent.start(argv.load_memory, null, argv.count_id);
 }

@@ -1,6 +1,7 @@
 import { getBlockId, getItemId } from "../../utils/mcdata.js";
 import { actionsList } from './actions.js';
 import { queryList } from './queries.js';
+import {emit_benchmark_event, start_benchmark_span} from '../../logging/benchmark_logger.js';
 
 let suppressNoDomainWarning = true;
 
@@ -219,21 +220,79 @@ function numParams(command) {
 export async function executeCommand(agent, message) {
     let parsed = parseCommandMessage(message);
     // [Achievement Hunter Project] Parse/validation errors wrapped as {success, message} to match action command shape.
-    if (typeof parsed === 'string')
+    if (typeof parsed === 'string') {
+        emit_benchmark_event(agent?.benchmark_logger, 'command_parse_failed', {
+            raw_message: message,
+            error: parsed
+        });
         return { success: false, message: parsed };
-    else {
+    } else {
         console.log('parsed command:', parsed);
         const command = getCommand(parsed.commandName);
         let numArgs = 0;
         if (parsed.args) {
             numArgs = parsed.args.length;
         }
-        if (numArgs !== numParams(command))
+        if (numArgs !== numParams(command)) {
+            emit_benchmark_event(agent?.benchmark_logger, 'command_parse_failed', {
+                raw_message: message,
+                command_name: parsed.commandName,
+                args: parsed.args,
+                error: `Command ${command.name} was given ${numArgs} args, but requires ${numParams(command)} args.`
+            });
             return { success: false, message: `Command ${command.name} was given ${numArgs} args, but requires ${numParams(command)} args.` };
-        else {
+        } else {
+            const actionCommand = isAction(parsed.commandName);
+            const logger = agent?.benchmark_logger;
+            const spanData = {
+                raw_message: message,
+                command_name: parsed.commandName,
+                args: parsed.args,
+                command_kind: actionCommand ? 'action' : 'query'
+            };
+            const commandSpan = start_benchmark_span(logger, 'command', spanData);
+            const actionSpan = actionCommand ? start_benchmark_span(logger, 'action', spanData) : null;
+
             // Action commands (via runAsAction) return {success, message}; query commands return a plain string.
-            const result = await command.perform(agent, ...parsed.args);
-            return result;
+            try {
+                const result = await command.perform(agent, ...parsed.args);
+                const structuredSuccess = typeof result === 'object' && result !== null && typeof result.success === 'boolean' ?
+                    result.success : true;
+                const resultMessage = typeof result === 'object' && result !== null ? result.message : result;
+                const endData = {
+                    success: structuredSuccess,
+                    result_kind: typeof result,
+                    message: resultMessage ?? null,
+                    interrupted: result?.interrupted ?? false,
+                    timedout: result?.timedout ?? false,
+                    action_name: result?.action_name ?? null
+                };
+
+                if (structuredSuccess) {
+                    commandSpan?.end(endData);
+                    actionSpan?.end(endData);
+                } else {
+                    commandSpan?.fail(resultMessage ?? 'command failed', endData);
+                    actionSpan?.fail(resultMessage ?? 'action failed', endData);
+
+                    if (result?.interrupted) {
+                        emit_benchmark_event(logger, 'action_interrupted', {
+                            ...spanData,
+                            ...endData
+                        });
+                    }
+                }
+
+                return result;
+            } catch (error) {
+                const failureData = {
+                    ...spanData,
+                    success: false
+                };
+                commandSpan?.fail(error, failureData);
+                actionSpan?.fail(error, failureData);
+                throw error;
+            }
         }
     }
 }

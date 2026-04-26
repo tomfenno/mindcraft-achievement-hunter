@@ -131,13 +131,27 @@ export class AchievementAgent extends Agent {
    * completion or crash.
    */
   _launch_spl(objective, graph = null) {
+    this.benchmark_logger?.event('objective_started', {
+      objective,
+      resumed_from_checkpoint: !!graph,
+    });
+
     structured_loop(this._spl_models, this, objective, graph)
         .then(() => {
+          this.benchmark_logger?.event('objective_completed', {
+            objective,
+            status: 'success',
+          });
           this._waiting_for_objective = true;
           this.openChat('Task complete! Send me a new objective.');
         })
         .catch(err => {
           console.error('[SPL] Structured loop crashed:', err);
+          this.benchmark_logger?.event('objective_failed', {
+            objective,
+            status: 'failed',
+            error: err?.message ?? String(err),
+          });
           this._waiting_for_objective = true;
           this.openChat('SPL crashed. Send a new objective to retry.');
         });

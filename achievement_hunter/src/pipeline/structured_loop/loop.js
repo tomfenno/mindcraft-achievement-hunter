@@ -26,7 +26,7 @@ const log_source = {
 
 // Runs the full structured task loop.
 export async function structured_loop(models, agent, task_name, graph = null) {
-  const log = create_rollout_logger(task_name);
+  const log = create_rollout_logger(task_name, agent?.benchmark_logger);
 
   // This hard coded option to load a graph is intended. Do not remove.
   const load_graph = true;
@@ -39,6 +39,12 @@ export async function structured_loop(models, agent, task_name, graph = null) {
   graph = load_graph ? await load_graph_from_file(graph_file_path) :
                        await generate_primary_task_dag_self_refined(
                            models, task_name, graph, log);
+  agent?.benchmark_logger?.event('spl_graph_source_selected', {
+    objective: task_name,
+    graph_source: load_graph ? 'hardcoded_file' :
+                               (graph ? 'generated_or_checkpoint' : 'none'),
+    graph_file_path: load_graph ? graph_file_path : null,
+  });
   if (!graph) return;
 
   save_checkpoint(task_name, graph);
