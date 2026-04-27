@@ -1,0 +1,22 @@
+{
+  "suite_name": "vanilla_advancements_v1",
+  "task_path": "tasks/advancement_tasks/vanilla_advancements.json",
+  "agents": [
+    {
+      "label": "our_agent",
+      "profile": "./achievement_hunter/src/profile.json",
+      "settings_override": {
+        "achievement_hunter": true,
+        "auto_open_ui": false
+      }
+    }
+  ],
+  "world": {
+    "seeds": [12345],
+    "difficulty": "normal",
+    "gamemode": "survival",
+    "generate_structures": true,
+    "allow_cheats": false,
+    "level_name": "world"
+  }
+}

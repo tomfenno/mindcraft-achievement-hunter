@@ -78,6 +78,10 @@ export function getAgentProcess(agentName) {
     return agent_processes[agentName];
 }
 
+export function registerAgentProcess(agentName, agentProcess) {
+    agent_processes[agentName] = agentProcess;
+}
+
 export function startAgent(agentName) {
     if (agent_processes[agentName]) {
         agent_processes[agentName].forceRestart();

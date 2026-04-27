@@ -3,14 +3,6 @@
   "task_path": "tasks/advancement_tasks/vanilla_advancements.json",
   "agents": [
     {
-      "label": "baseline_andy",
-      "profile": "./andy.json",
-      "settings_override": {
-        "achievement_hunter": false,
-        "auto_open_ui": false
-      }
-    },
-    {
       "label": "our_agent",
       "profile": "./achievement_hunter/src/profile.json",
       "settings_override": {

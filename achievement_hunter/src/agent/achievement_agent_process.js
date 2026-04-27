@@ -18,6 +18,7 @@ export class AchievementAgentProcess {
   constructor(name, port) {
     this.name = name;
     this.port = port;
+    this._stop_requested = false;
   }
 
   /**
@@ -26,6 +27,7 @@ export class AchievementAgentProcess {
   start(load_memory = false, count_id = 0) {
     this.count_id = count_id;
     this.running = true;
+    this._stop_requested = false;
 
     const spawn_args = [
       'achievement_hunter/src/agent/init_achievement_agent.js',
@@ -46,10 +48,17 @@ export class AchievementAgentProcess {
     let last_restart = Date.now();
 
     child.on('exit', (code, signal) => {
+      const stop_requested = this._stop_requested;
       console.log(`Achievement agent process exited with code ${
           code} and signal ${signal}`);
       this.running = false;
+      this._stop_requested = false;
       logoutAgent(this.name);
+
+      if (stop_requested) {
+        console.log('Achievement agent stop requested; not restarting.');
+        return;
+      }
 
       if (code > 1) {
         console.log('Ending task.');
@@ -78,6 +87,7 @@ export class AchievementAgentProcess {
   /** Sends SIGINT to the child process to trigger a clean shutdown. */
   stop() {
     if (!this.running) return;
+    this._stop_requested = true;
     this.process.kill('SIGINT');
   }
 
@@ -86,6 +96,7 @@ export class AchievementAgentProcess {
    * A non-zero exit code without SIGINT is treated as an unexpected crash.
    */
   _should_restart(exit_code, exit_signal) {
-    return exit_code !== 0 && exit_signal !== 'SIGINT';
+    return !this._stop_requested &&
+        exit_code !== 0 && exit_signal !== 'SIGINT';
   }
 }

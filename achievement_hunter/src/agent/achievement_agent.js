@@ -11,7 +11,6 @@ import path from 'path';
 import {fileURLToPath} from 'url';
 
 import {Agent} from '../../../src/agent/agent.js';
-import settings from '../../../settings.js';
 import {loadCheckpoint} from '../pipeline/checkpoint.js';
 import {LlmClient} from '../pipeline/llm_client.js';
 import {structured_loop} from '../pipeline/structured_loop/loop.js';
@@ -40,6 +39,10 @@ export class AchievementAgent extends Agent {
 
     init_ah_modes(this);
     this._silence_chat_listeners();
+    const benchmarkTask = this.task?.data;
+    this._benchmark_advancement_mode = benchmarkTask?.type === 'advancement';
+    this._benchmark_shutdown_requested = false;
+    this._task_completion_recorded = false;
 
     const saved_checkpoint = loadCheckpoint();
     if (saved_checkpoint) {
@@ -53,13 +56,19 @@ export class AchievementAgent extends Agent {
     }
 
     if (
-      settings.task && settings.task.type === 'advancement' &&
-      typeof settings.task.goal === 'string' && settings.task.goal.trim()
+      this._benchmark_advancement_mode &&
+      typeof benchmarkTask.goal === 'string' && benchmarkTask.goal.trim()
     ) {
       this._waiting_for_objective = false;
-      console.log('[SPL] Starting benchmark objective:', settings.task.goal);
-      this._launch_spl(settings.task.goal);
+      console.log('[SPL] Starting benchmark objective:', benchmarkTask.goal);
+      this._launch_spl(benchmarkTask.goal);
       return;
+    }
+
+    if (benchmarkTask?.type === 'advancement') {
+      console.warn(
+          '[SPL] Advancement benchmark task is missing a usable goal; ' +
+          'entering interactive objective mode.');
     }
 
     this._waiting_for_objective = true;
@@ -76,6 +85,28 @@ export class AchievementAgent extends Agent {
     if (this.task?.data?.type === 'advancement') {
       await this.checkTaskDone();
     }
+  }
+
+  async checkTaskDone() {
+    if (this._task_completion_recorded) {
+      return true;
+    }
+
+    if (!this.task?.data) {
+      return false;
+    }
+
+    const res = this.task.isDone();
+    if (!res) {
+      return false;
+    }
+
+    this._task_completion_recorded = true;
+    await this.history.add('system', `Task ended with score : ${res.score}`);
+    await this.history.save();
+    console.log('Task finished:', res.message);
+    this.killAll();
+    return true;
   }
 
   async handleMessage(source, message, max_responses = null) {
@@ -102,6 +133,18 @@ export class AchievementAgent extends Agent {
     super.cleanKill(msg, code);
   }
 
+  killAll() {
+    if (this._benchmark_advancement_mode) {
+      if (this._benchmark_shutdown_requested) {
+        return;
+      }
+      this._benchmark_shutdown_requested = true;
+      this._disconnectHandled = true;
+    }
+
+    super.killAll();
+  }
+
   _init_spl_models() {
     const profile = JSON.parse(
         readFileSync(path.join(__dirname, '../profile.json'), 'utf8'));
@@ -117,12 +160,28 @@ export class AchievementAgent extends Agent {
 
   _launch_spl(objective, graph = null) {
     structured_loop(this._spl_models, this, objective, graph)
-        .then(() => {
+        .then(async () => {
+          if (this._benchmark_advancement_mode) {
+            const task_completed = await this.checkTaskDone();
+            if (!task_completed && !this._benchmark_shutdown_requested) {
+              console.log(
+                  '[SPL] Benchmark objective complete; waiting for ' +
+                  'benchmark validation/shutdown.');
+            }
+            return;
+          }
+
           this._waiting_for_objective = true;
           this.openChat('Task complete! Send me a new objective.');
         })
         .catch(err => {
           console.error('[SPL] Structured loop crashed:', err);
+          if (this._benchmark_advancement_mode) {
+            console.error(
+                '[SPL] Benchmark objective crashed; waiting for task ' +
+                'timeout or external shutdown.');
+            return;
+          }
           this._waiting_for_objective = true;
           this.openChat('SPL crashed. Send a new objective to retry.');
         });

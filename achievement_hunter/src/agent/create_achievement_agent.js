@@ -5,6 +5,7 @@
  */
 
 import {getServer} from '../../../src/mindcraft/mcserver.js';
+import {registerAgentProcess} from '../../../src/mindcraft/mindcraft.js';
 import {registerAgent} from '../../../src/mindcraft/mindserver.js';
 
 import {AchievementAgentProcess} from './achievement_agent_process.js';
@@ -44,4 +45,5 @@ export async function create_achievement_agent(settings) {
   const agent_process =
       new AchievementAgentProcess(agent_name, settings.mindserver_port);
   agent_process.start(settings.load_memory || false, agent_index);
+  registerAgentProcess(agent_name, agent_process);
 }
