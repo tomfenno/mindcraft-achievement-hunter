@@ -1,0 +1,37 @@
+{
+  "minecraft_story_root": {
+    "type": "advancement",
+    "goal": "Starting from a fresh survival world, obtain the Minecraft story root advancement by making a crafting table.",
+    "advancement_id": "minecraft:story/root",
+    "agent_count": 1,
+    "timeout": 1200
+  },
+  "stone_age": {
+    "type": "advancement",
+    "goal": "Starting from a fresh survival world, obtain the Stone Age advancement.",
+    "advancement_id": "minecraft:story/mine_stone",
+    "agent_count": 1,
+    "timeout": 1800
+  },
+  "getting_an_upgrade": {
+    "type": "advancement",
+    "goal": "Starting from a fresh survival world, obtain the Getting an Upgrade advancement by crafting a stone pickaxe.",
+    "advancement_id": "minecraft:story/upgrade_tools",
+    "agent_count": 1,
+    "timeout": 1800
+  },
+  "acquire_hardware": {
+    "type": "advancement",
+    "goal": "Starting from a fresh survival world, obtain the Acquire Hardware advancement by smelting an iron ingot.",
+    "advancement_id": "minecraft:story/smelt_iron",
+    "agent_count": 1,
+    "timeout": 2400
+  },
+  "isnt_it_iron_pick": {
+    "type": "advancement",
+    "goal": "Starting from a fresh survival world, obtain the Isn't It Iron Pick advancement by crafting an iron pickaxe.",
+    "advancement_id": "minecraft:story/iron_tools",
+    "agent_count": 1,
+    "timeout": 3000
+  }
+}

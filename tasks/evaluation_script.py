@@ -1,9 +1,11 @@
 import argparse
+import csv
 import json
 import shutil
 import subprocess
 import time
 from datetime import datetime
+import tempfile
 import re
 import sys
 import os
@@ -12,8 +14,17 @@ import filecmp
 import json
 import glob
 import socket
+import signal
 
 import boto3
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_BENCHMARK_TEMPLATE = os.path.join(
+    PROJECT_ROOT, "tasks", "server_templates", "vanilla_base"
+)
+ACHIEVEMENT_HUNTER_CHECKPOINT = os.path.join(
+    PROJECT_ROOT, "achievement_hunter", "rollouts", "checkpoint.json"
+)
 
 BLOCKED_ACTIONS_COOKING = [
     '!activate', '!attackPlayer', '!checkBlueprint', '!checkBlueprintLevel',
@@ -236,6 +247,599 @@ def update_keys_json():
 
     with open("keys.json", 'w', encoding='utf-8') as file:
         json.dump(data, file, indent=4)
+
+def resolve_project_path(path_value):
+    if os.path.isabs(path_value):
+        return os.path.normpath(path_value)
+    return os.path.normpath(os.path.join(PROJECT_ROOT, path_value))
+
+def load_json_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+def ensure_directory(path_value):
+    os.makedirs(path_value, exist_ok=True)
+
+def safe_remove_tree(target_path, allowed_root):
+    if not os.path.exists(target_path):
+        return
+    target_abs = os.path.abspath(target_path)
+    allowed_abs = os.path.abspath(allowed_root)
+    if os.path.commonpath([target_abs, allowed_abs]) != allowed_abs:
+        raise ValueError(f"Refusing to delete path outside benchmark root: {target_abs}")
+    shutil.rmtree(target_abs)
+
+def append_or_replace_manifest(manifests, new_manifest):
+    key = (
+        new_manifest["agent_label"],
+        new_manifest["seed"],
+        new_manifest["task_id"],
+    )
+    filtered = [
+        manifest for manifest in manifests
+        if (manifest["agent_label"], manifest["seed"], manifest["task_id"]) != key
+    ]
+    filtered.append(new_manifest)
+    filtered.sort(key=lambda manifest: (
+        manifest["agent_label"],
+        manifest["seed"],
+        manifest["task_id"],
+    ))
+    return filtered
+
+def load_existing_episode_manifests(suite_root):
+    manifests = []
+    for manifest_path in glob.glob(
+        os.path.join(suite_root, "**", "episode_manifest.json"),
+        recursive=True,
+    ):
+        try:
+            manifests.append(load_json_file(manifest_path))
+        except Exception as exc:
+            print(f"Skipping unreadable manifest {manifest_path}: {exc}")
+    manifests.sort(key=lambda manifest: (
+        manifest["agent_label"],
+        manifest["seed"],
+        manifest["task_id"],
+    ))
+    return manifests
+
+def write_results_jsonl(results_path, manifests):
+    with open(results_path, "w", encoding="utf-8") as file:
+        for manifest in manifests:
+            file.write(json.dumps(manifest, sort_keys=True) + "\n")
+
+def write_summary_reports(suite_root, manifests):
+    per_task_rows = {}
+    summary_rows = {}
+
+    for manifest in manifests:
+        score = manifest.get("score", 0) or 0
+        success = 1 if score >= 1 else 0
+
+        per_task_key = (
+            manifest["agent_label"],
+            manifest["agent_name"],
+            manifest["mode"],
+            manifest["task_id"],
+            manifest["advancement_id"],
+        )
+        if per_task_key not in per_task_rows:
+            per_task_rows[per_task_key] = {
+                "agent_label": manifest["agent_label"],
+                "agent_name": manifest["agent_name"],
+                "mode": manifest["mode"],
+                "task_id": manifest["task_id"],
+                "advancement_id": manifest["advancement_id"],
+                "runs": 0,
+                "successful_runs": 0,
+            }
+        per_task_rows[per_task_key]["runs"] += 1
+        per_task_rows[per_task_key]["successful_runs"] += success
+
+        summary_key = (
+            manifest["agent_label"],
+            manifest["agent_name"],
+            manifest["mode"],
+        )
+        if summary_key not in summary_rows:
+            summary_rows[summary_key] = {
+                "agent_label": manifest["agent_label"],
+                "agent_name": manifest["agent_name"],
+                "mode": manifest["mode"],
+                "runs": 0,
+                "successful_runs": 0,
+            }
+        summary_rows[summary_key]["runs"] += 1
+        summary_rows[summary_key]["successful_runs"] += success
+
+    per_task_path = os.path.join(suite_root, "per_task.csv")
+    with open(per_task_path, "w", newline="", encoding="utf-8") as file:
+        fieldnames = [
+            "agent_label",
+            "agent_name",
+            "mode",
+            "task_id",
+            "advancement_id",
+            "runs",
+            "successful_runs",
+            "success_rate",
+        ]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in sorted(per_task_rows.values(), key=lambda item: (
+            item["agent_label"],
+            item["task_id"],
+        )):
+            runs = row["runs"]
+            row["success_rate"] = row["successful_runs"] / runs if runs else 0
+            writer.writerow(row)
+
+    summary_path = os.path.join(suite_root, "summary.csv")
+    with open(summary_path, "w", newline="", encoding="utf-8") as file:
+        fieldnames = [
+            "agent_label",
+            "agent_name",
+            "mode",
+            "runs",
+            "successful_runs",
+            "success_rate",
+        ]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in sorted(summary_rows.values(), key=lambda item: item["agent_label"]):
+            runs = row["runs"]
+            row["success_rate"] = row["successful_runs"] / runs if runs else 0
+            writer.writerow(row)
+
+def format_property_value(value):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+def update_properties_file(file_path, overrides):
+    with open(file_path, "r", encoding="utf-8") as file:
+        lines = file.readlines()
+
+    seen_keys = set()
+    updated_lines = []
+    for line in lines:
+        if "=" not in line or line.lstrip().startswith("#"):
+            updated_lines.append(line)
+            continue
+
+        key, _ = line.split("=", 1)
+        if key in overrides:
+            updated_lines.append(f"{key}={format_property_value(overrides[key])}\n")
+            seen_keys.add(key)
+        else:
+            updated_lines.append(line)
+
+    for key, value in overrides.items():
+        if key not in seen_keys:
+            updated_lines.append(f"{key}={format_property_value(value)}\n")
+
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.writelines(updated_lines)
+
+def choose_free_port():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return sock.getsockname()[1]
+
+def server_log_indicates_ready(output_path):
+    if not output_path or not os.path.exists(output_path):
+        return False
+    try:
+        with open(output_path, "r", encoding="utf-8", errors="ignore") as file:
+            content = file.read()
+    except OSError:
+        return False
+    return "Done (" in content or 'For help, type "help"' in content
+
+def wait_for_server_ready(port, process, output_path=None, timeout_seconds=180):
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        if process.poll() is not None:
+            raise RuntimeError(
+                f"Minecraft server exited before becoming ready on port {port} "
+                f"with return code {process.returncode}."
+            )
+        if server_log_indicates_ready(output_path) and test_server_running(port):
+            return
+        time.sleep(2)
+    raise TimeoutError(f"Minecraft server did not start on port {port} within {timeout_seconds}s")
+
+def get_popen_group_kwargs():
+    if os.name == "nt":
+        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+    return {"preexec_fn": os.setsid}
+
+def terminate_process_tree(process):
+    if process is None or process.poll() is not None:
+        return
+
+    try:
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        else:
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+    except Exception as exc:
+        print(f"Failed to terminate process tree for PID {process.pid}: {exc}")
+
+def stop_server_process(process):
+    if process is None:
+        return None
+    if process.poll() is not None:
+        return process.returncode
+
+    try:
+        if process.stdin:
+            process.stdin.write("stop\n")
+            process.stdin.flush()
+    except Exception as exc:
+        print(f"Failed to send stop command to Minecraft server: {exc}")
+
+    try:
+        return process.wait(timeout=60)
+    except subprocess.TimeoutExpired:
+        terminate_process_tree(process)
+        try:
+            return process.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            return None
+
+def launch_logged_process(command, cwd, output_path, env=None):
+    output_handle = open(output_path, "w", encoding="utf-8")
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        env=env,
+        stdin=subprocess.PIPE,
+        stdout=output_handle,
+        stderr=subprocess.STDOUT,
+        text=True,
+        **get_popen_group_kwargs(),
+    )
+    return process, output_handle
+
+def clear_achievement_hunter_checkpoint():
+    if os.path.exists(ACHIEVEMENT_HUNTER_CHECKPOINT):
+        os.remove(ACHIEVEMENT_HUNTER_CHECKPOINT)
+
+def copy_file_if_exists(source_path, dest_path):
+    if not os.path.exists(source_path):
+        return
+    ensure_directory(os.path.dirname(dest_path))
+    shutil.copy2(source_path, dest_path)
+
+def copy_files_modified_since(source_root, dest_root, start_time):
+    if not os.path.exists(source_root):
+        return
+
+    for root, _, files in os.walk(source_root):
+        for name in files:
+            source_path = os.path.join(root, name)
+            try:
+                modified_time = os.path.getmtime(source_path)
+            except OSError:
+                continue
+            if modified_time + 1 < start_time:
+                continue
+            relative_path = os.path.relpath(source_path, source_root)
+            destination_path = os.path.join(dest_root, relative_path)
+            ensure_directory(os.path.dirname(destination_path))
+            shutil.copy2(source_path, destination_path)
+
+def copy_agent_artifacts(agent_name, result_dir, episode_start_time):
+    agent_root = os.path.join(PROJECT_ROOT, "bots", agent_name)
+    artifact_root = os.path.join(result_dir, "agent_artifacts", agent_name)
+    ensure_directory(artifact_root)
+
+    for file_name in ("memory.json", "last_profile.json", "profile.json"):
+        copy_file_if_exists(
+            os.path.join(agent_root, file_name),
+            os.path.join(artifact_root, file_name),
+        )
+
+    copy_files_modified_since(
+        os.path.join(agent_root, "histories"),
+        os.path.join(artifact_root, "histories"),
+        episode_start_time,
+    )
+    copy_files_modified_since(
+        os.path.join(agent_root, "logs"),
+        os.path.join(artifact_root, "logs"),
+        episode_start_time,
+    )
+
+def copy_server_artifacts(server_root, result_dir):
+    copy_file_if_exists(
+        os.path.join(server_root, "logs", "latest.log"),
+        os.path.join(result_dir, "latest.log"),
+    )
+    copy_file_if_exists(
+        os.path.join(server_root, "server.properties"),
+        os.path.join(result_dir, "server.properties"),
+    )
+    copy_file_if_exists(
+        os.path.join(server_root, "usercache.json"),
+        os.path.join(result_dir, "usercache.json"),
+    )
+
+def read_profile_name(profile_path):
+    profile = load_json_file(profile_path)
+    if "name" not in profile:
+        raise ValueError(f"Profile file is missing a name field: {profile_path}")
+    return profile["name"]
+
+def inspect_advancement_completion(server_root, world_path, agent_name, advancement_id):
+    usercache_path = os.path.join(server_root, "usercache.json")
+    if not os.path.exists(usercache_path):
+        return 0
+
+    try:
+        usercache = load_json_file(usercache_path)
+    except Exception:
+        return 0
+
+    user_entry = next((entry for entry in usercache if entry.get("name") == agent_name), None)
+    if not user_entry or "uuid" not in user_entry:
+        return 0
+
+    advancement_path = os.path.join(world_path, "advancements", f"{user_entry['uuid']}.json")
+    if not os.path.exists(advancement_path):
+        return 0
+
+    try:
+        advancement_data = load_json_file(advancement_path)
+    except Exception:
+        return 0
+
+    return 1 if advancement_data.get(advancement_id, {}).get("done") is True else 0
+
+def extract_result_recursive(folder_path):
+    curr_score = None
+    for json_file in glob.glob(os.path.join(folder_path, "**", "*.json"), recursive=True):
+        score = analyze_json_file(json_file)
+        if score is None:
+            continue
+        if curr_score is None:
+            curr_score = score
+        else:
+            curr_score = max(curr_score, score)
+    return curr_score
+
+def prepare_benchmark_server(server_root, world_config, seed, server_port):
+    if not os.path.exists(DEFAULT_BENCHMARK_TEMPLATE):
+        raise FileNotFoundError(
+            "Benchmark server template not found at "
+            f"{DEFAULT_BENCHMARK_TEMPLATE}"
+        )
+
+    shutil.copytree(DEFAULT_BENCHMARK_TEMPLATE, server_root, dirs_exist_ok=True)
+    overrides = {
+        "allow-cheats": world_config.get("allow_cheats", False),
+        "difficulty": world_config.get("difficulty", "normal"),
+        "enable-command-block": False,
+        "force-gamemode": False,
+        "gamemode": world_config.get("gamemode", "survival"),
+        "generate-structures": world_config.get("generate_structures", True),
+        "generator-settings": "",
+        "level-name": world_config.get("level_name", "world"),
+        "level-seed": seed,
+        "level-type": "minecraft:normal",
+        "online-mode": False,
+        "spawn-protection": 0,
+        "server-port": server_port,
+    }
+    update_properties_file(os.path.join(server_root, "server.properties"), overrides)
+
+def build_episode_settings(agent_config):
+    settings_override = dict(agent_config.get("settings_override", {}))
+    settings_override.setdefault("achievement_hunter", False)
+    settings_override["auto_open_ui"] = False
+    settings_override.setdefault("allow_insecure_coding", False)
+    settings_override.setdefault("auth", "offline")
+    settings_override.setdefault("host", "127.0.0.1")
+    settings_override.setdefault("load_memory", False)
+    return settings_override
+
+def run_single_benchmark_episode(suite_root, task_path, task_id, task_data, agent_config, seed, world_config):
+    agent_label = agent_config["label"]
+    profile_path = resolve_project_path(agent_config["profile"])
+    agent_name = read_profile_name(profile_path)
+    level_name = world_config.get("level_name", "world")
+    result_dir = os.path.join(suite_root, agent_label, f"seed_{seed}", task_id)
+    ensure_directory(os.path.dirname(result_dir))
+    safe_remove_tree(result_dir, suite_root)
+    ensure_directory(result_dir)
+
+    tmp_root = os.path.join(PROJECT_ROOT, "tmp")
+    ensure_directory(tmp_root)
+    server_root = tempfile.mkdtemp(
+        prefix="benchmark_server_",
+        dir=tmp_root,
+    )
+    world_path = os.path.join(server_root, level_name)
+    server_port = choose_free_port()
+    mindserver_port = choose_free_port()
+    settings_override = build_episode_settings(agent_config)
+    mode = "achievement_hunter" if settings_override.get("achievement_hunter") else "standard_task"
+
+    start_dt = datetime.now().astimezone()
+    episode_start_time = time.time()
+    end_dt = start_dt
+    node_exit_code = None
+    exit_status = "failed"
+    error_message = None
+    server_process = None
+    server_output_handle = None
+    node_process = None
+    node_output_handle = None
+
+    try:
+        prepare_benchmark_server(server_root, world_config, seed, server_port)
+
+        if settings_override.get("achievement_hunter"):
+            clear_achievement_hunter_checkpoint()
+
+        server_stdout_path = os.path.join(result_dir, "server_stdout.log")
+        server_process, server_output_handle = launch_logged_process(
+            ["java", "-jar", "server.jar", "nogui"],
+            server_root,
+            server_stdout_path,
+        )
+        wait_for_server_ready(
+            server_port,
+            server_process,
+            output_path=server_stdout_path,
+            timeout_seconds=180,
+        )
+
+        env = os.environ.copy()
+        env["LOG_ALL"] = "true"
+        env["MINECRAFT_PORT"] = str(server_port)
+        env["MINDSERVER_PORT"] = str(mindserver_port)
+        env["SETTINGS_JSON"] = json.dumps(settings_override)
+        env["TASK_SERVER_ROOT"] = server_root
+        env["TASK_WORLD_PATH"] = world_path
+
+        node_stdout_path = os.path.join(result_dir, "runner_stdout.log")
+        node_process, node_output_handle = launch_logged_process(
+            [
+                "node",
+                "main.js",
+                "--task_path",
+                task_path,
+                "--task_id",
+                task_id,
+                "--profiles",
+                profile_path,
+            ],
+            PROJECT_ROOT,
+            node_stdout_path,
+            env=env,
+        )
+
+        timeout_seconds = int(task_data.get("timeout", 1800)) + 600
+        try:
+            node_exit_code = node_process.wait(timeout=timeout_seconds)
+            exit_status = "completed" if node_exit_code == 0 else "failed"
+        except subprocess.TimeoutExpired:
+            exit_status = "timeout"
+            terminate_process_tree(node_process)
+            try:
+                node_exit_code = node_process.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                node_exit_code = None
+
+        time.sleep(3)
+    except Exception as exc:
+        error_message = str(exc)
+        exit_status = "error"
+        if node_process is not None:
+            terminate_process_tree(node_process)
+        if server_process is not None:
+            terminate_process_tree(server_process)
+    finally:
+        end_dt = datetime.now().astimezone()
+        if node_output_handle is not None:
+            node_output_handle.close()
+        if server_process is not None:
+            stop_server_process(server_process)
+        if server_output_handle is not None:
+            server_output_handle.close()
+        if settings_override.get("achievement_hunter"):
+            clear_achievement_hunter_checkpoint()
+
+        copy_server_artifacts(server_root, result_dir)
+        copy_agent_artifacts(agent_name, result_dir, episode_start_time)
+
+        score = extract_result_recursive(result_dir)
+        if score is None:
+            score = inspect_advancement_completion(
+                server_root,
+                world_path,
+                agent_name,
+                task_data["advancement_id"],
+            )
+
+        manifest = {
+            "advancement_id": task_data["advancement_id"],
+            "agent_label": agent_label,
+            "agent_name": agent_name,
+            "end_time": end_dt.isoformat(),
+            "error": error_message,
+            "exit_code": node_exit_code,
+            "exit_status": exit_status,
+            "mode": mode,
+            "profile": profile_path,
+            "score": score,
+            "seed": seed,
+            "start_time": start_dt.isoformat(),
+            "task_id": task_id,
+            "task_path": task_path,
+        }
+        with open(os.path.join(result_dir, "episode_manifest.json"), "w", encoding="utf-8") as file:
+            json.dump(manifest, file, indent=2)
+
+        safe_remove_tree(server_root, tmp_root)
+
+    return manifest
+
+def validate_benchmark_suite(config, task_data):
+    if "suite_name" not in config:
+        raise ValueError("benchmark_config is missing suite_name")
+    if "agents" not in config or not config["agents"]:
+        raise ValueError("benchmark_config must include at least one agent")
+    if "world" not in config or not config["world"].get("seeds"):
+        raise ValueError("benchmark_config must include a non-empty world.seeds list")
+
+    for task_id, task_definition in task_data.items():
+        if task_definition.get("type") != "advancement":
+            raise ValueError(f"Benchmark task {task_id} must have type=advancement")
+        if task_definition.get("agent_count") != 1:
+            raise ValueError(f"Benchmark task {task_id} must have agent_count=1")
+        if "advancement_id" not in task_definition:
+            raise ValueError(f"Benchmark task {task_id} is missing advancement_id")
+
+def run_benchmark_suite(config_path):
+    config_path = resolve_project_path(config_path)
+    config = load_json_file(config_path)
+    task_path = resolve_project_path(config["task_path"])
+    task_data = load_json_file(task_path)
+    validate_benchmark_suite(config, task_data)
+
+    suite_root = os.path.join(PROJECT_ROOT, "experiments", config["suite_name"])
+    ensure_directory(suite_root)
+
+    manifests = load_existing_episode_manifests(suite_root)
+    for agent_config in config["agents"]:
+        for seed in config["world"]["seeds"]:
+            for task_id, task_definition in task_data.items():
+                print(
+                    f"Running benchmark episode agent={agent_config['label']} "
+                    f"seed={seed} task={task_id}"
+                )
+                manifest = run_single_benchmark_episode(
+                    suite_root,
+                    task_path,
+                    task_id,
+                    task_definition,
+                    agent_config,
+                    seed,
+                    config["world"],
+                )
+                manifests = append_or_replace_manifest(manifests, manifest)
+                write_results_jsonl(os.path.join(suite_root, "results.jsonl"), manifests)
+                write_summary_reports(suite_root, manifests)
 
 def set_environment_variable_tmux_session(session_name, key, value):
     """Set an environment variable for the current process."""
@@ -599,16 +1203,8 @@ def create_server_files(source_path, num_copies, world_name="Forest"):
 
 def edit_file(file, content_dict):
     try:
-        with open(file, 'r') as f:
-            lines = f.readlines()
-        with open(file, 'w') as f:
-            for line in lines:
-                for key, value in content_dict.items():
-                    if line.startswith(key):
-                        f.write(f"{key}={value}\n")
-                    else:
-                        f.write(line)
-        print(f"{file} updated with {content_dict}")  
+        update_properties_file(file, content_dict)
+        print(f"{file} updated with {content_dict}")
     except Exception as e:
         print(f"Error editing file {file}: {e}")
 
@@ -681,10 +1277,10 @@ def test_server_running(port=55916):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.connect((host, port))
-            print("Server is running on port 55916")
+            print(f"Server is running on port {port}")
             return True
-        except ConnectionRefusedError:
-            print("Server is not running on port 55916")
+        except OSError:
+            print(f"Server is not running on port {port}")
             return False
 
 def kill_world(session_name="server"):
@@ -751,9 +1347,14 @@ def main():
     parser.add_argument('--block_conversation', action='store_true', help='Block conversation actions')
     parser.add_argument('--check', metavar='FOLDER_PATH', help='Check and evaluate results in the specified folder without running experiments')
     parser.add_argument('--usernames', default="", help='Comma-separated list of usernames for the agents')
+    parser.add_argument('--benchmark_config', help='Run the cross-platform vanilla advancement benchmark suite defined in the given config JSON')
 
     args = parser.parse_args()
     print(args)
+
+    if args.benchmark_config:
+        run_benchmark_suite(args.benchmark_config)
+        return
     
     # If --check flag is provided, evaluate results in the specified folder and exit
     if args.check:

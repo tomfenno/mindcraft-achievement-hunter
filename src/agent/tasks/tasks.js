@@ -3,6 +3,7 @@ import { executeCommand } from '../commands/index.js';
 import { getPosition } from '../library/world.js';
 import { ConstructionTaskValidator, Blueprint } from './construction_tasks.js';
 import { CookingTaskInitiator } from './cooking_tasks.js';
+import { AdvancementTaskValidator } from './advancement_tasks.js';
 
 const PROGRESS_FILE = './hells_kitchen_progress.json';
 
@@ -277,7 +278,8 @@ export class Task {
                 this.validator = new ConstructionTaskValidator(this.data, this.agent);
             } else if (this.task_type === 'cooking' || this.task_type === 'techtree') {
                 this.validator = new CookingCraftingTaskValidator(this.data, this.agent);
-
+            } else if (this.task_type === 'advancement') {
+                this.validator = new AdvancementTaskValidator(this.data, this.agent);
             } else {
                 this.validator = null;
             }
@@ -367,17 +369,19 @@ export class Task {
         if (this.validator)
             res = this.validator.validate();
         if (res && res.valid) {
-            // Find all the agents and clear their inventories
-            for (let agent of this.available_agents) {
-                this.agent.bot.chat(`/clear ${agent}`);
+            if (this.task_type !== 'advancement') {
+                // Find all the agents and clear their inventories
+                for (let agent of this.available_agents) {
+                    this.agent.bot.chat(`/clear ${agent}`);
+                }
             }
-            // this.agent.bot.chat(`/clear @a`);
             return {"message": 'Task successful', "score": res.score};
         }
-        let other_names = this.available_agents.filter(n => n !== this.name);
         const elapsedTime = (Date.now() - this.taskStartTime) / 1000;
 
-        if (elapsedTime >= 30 && this.available_agents.length !== this.data.agent_count) {
+        if (this.data.agent_count > 1 &&
+            elapsedTime >= 30 &&
+            this.available_agents.length !== this.data.agent_count) {
             console.log('No other agents found. Task unsuccessful.');
             return {"message": 'No other agents found', "score": 0};
         }
@@ -406,6 +410,13 @@ export class Task {
     }
 
     async initBotTask() {
+        if (this.task_type === 'advancement') {
+            // Vanilla advancement benchmarks should start from the world's
+            // natural survival state with no task-side cheats or inventory
+            // mutation.
+            return;
+        }
+
         await this.agent.bot.chat(`/clear ${this.name}`);
         console.log(`Cleared ${this.name}'s inventory.`);
 
