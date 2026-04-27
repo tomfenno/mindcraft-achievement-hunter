@@ -42,6 +42,8 @@
     "benchmark:logger:demo": "node achievement_hunter/scripts/run_benchmark_logger_live_demo.js",
     "benchmark:logger:summary": "node achievement_hunter/scripts/run_benchmark_logger_live_demo.js --summary",
     "benchmark:logger:summarize": "node achievement_hunter/scripts/summarize_benchmark_log.js",
+    "benchmark:logger:table": "node achievement_hunter/scripts/render_benchmark_table.js",
+    "benchmark:logger:table:csv": "node achievement_hunter/scripts/render_benchmark_table.js --csv",
     "test": "vitest run",
     "test:watch": "vitest"
   },

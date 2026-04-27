@@ -299,6 +299,25 @@ export class Task {
 
         this.name = this.agent.name;
         this.available_agents = []
+        this._benchmarkOutcomeLogged = false;
+    }
+
+    _logBenchmarkOutcome(message, score) {
+        if (this._benchmarkOutcomeLogged) {
+            return;
+        }
+        this._benchmarkOutcomeLogged = true;
+
+        this.agent?.benchmark_logger?.event('task_outcome', {
+            objective: this.goal ?? this.data?.goal ?? this.data?.task_id ?? null,
+            task_id: this.data?.task_id ?? null,
+            task_type: this.task_type ?? null,
+            success: score > 0,
+            score,
+            outcome_message: message,
+            elapsed_time_s: (Date.now() - this.taskStartTime) / 1000,
+            seed: this.data?.seed ?? this.agent?.benchmark_logger?.staticContext?.seed ?? null
+        });
     }
 
     updateAvailableAgents(agents) {
@@ -372,6 +391,7 @@ export class Task {
                 this.agent.bot.chat(`/clear ${agent}`);
             }
             // this.agent.bot.chat(`/clear @a`);
+            this._logBenchmarkOutcome('Task successful', res.score);
             return {"message": 'Task successful', "score": res.score};
         }
         let other_names = this.available_agents.filter(n => n !== this.name);
@@ -379,6 +399,7 @@ export class Task {
 
         if (elapsedTime >= 30 && this.available_agents.length !== this.data.agent_count) {
             console.log('No other agents found. Task unsuccessful.');
+            this._logBenchmarkOutcome('No other agents found', 0);
             return {"message": 'No other agents found', "score": 0};
         }
         
@@ -386,8 +407,10 @@ export class Task {
             if (elapsedTime >= this.taskTimeout) {
                 console.log('Task timeout reached. Task unsuccessful.');
                 if (res) {
+                    this._logBenchmarkOutcome('Task timeout reached', res.score);
                     return {"message": 'Task timeout reached', "score": res.score};
                 } else {
+                    this._logBenchmarkOutcome('Task timeout reached', 0);
                     return {"message": 'Task timeout reached', "score": 0};
                 }
                 

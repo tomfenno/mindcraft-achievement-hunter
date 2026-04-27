@@ -31,6 +31,7 @@ export function attach_benchmark_logger(target, {
       agent_kind: agentKind,
       profile_name: profileName ?? agentName,
       count_id: countId,
+      seed: process.env.BENCHMARK_SEED ?? null,
       ...extraContext,
     },
   });
