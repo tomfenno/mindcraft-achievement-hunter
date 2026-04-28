@@ -23,6 +23,7 @@ const __dirname = path.dirname(__filename);
 // Matches the restart message in src/agent/library/skills.js; suppressed so
 // the SPL manages its own inventory reads.
 const RESTART_MSG = 'Safely restarting to update inventory.';
+const BENCHMARK_TASK_TYPES = new Set(['advancement', 'inventory']);
 
 export class AchievementAgent extends Agent {
   async _setupEventHandlers(save_data, init_message) {
@@ -40,7 +41,7 @@ export class AchievementAgent extends Agent {
     init_ah_modes(this);
     this._silence_chat_listeners();
     const benchmarkTask = this.task?.data;
-    this._benchmark_advancement_mode = benchmarkTask?.type === 'advancement';
+    this._benchmark_task_mode = BENCHMARK_TASK_TYPES.has(benchmarkTask?.type);
     this._benchmark_shutdown_requested = false;
     this._task_completion_recorded = false;
 
@@ -56,7 +57,7 @@ export class AchievementAgent extends Agent {
     }
 
     if (
-      this._benchmark_advancement_mode &&
+      this._benchmark_task_mode &&
       typeof benchmarkTask.goal === 'string' && benchmarkTask.goal.trim()
     ) {
       this._waiting_for_objective = false;
@@ -65,9 +66,9 @@ export class AchievementAgent extends Agent {
       return;
     }
 
-    if (benchmarkTask?.type === 'advancement') {
+    if (this._benchmark_task_mode) {
       console.warn(
-          '[SPL] Advancement benchmark task is missing a usable goal; ' +
+          '[SPL] Benchmark task is missing a usable goal; ' +
           'entering interactive objective mode.');
     }
 
@@ -77,12 +78,12 @@ export class AchievementAgent extends Agent {
 
   /**
    * Overrides the base tick to skip self-prompter updates. The SPL owns
-   * execution, but advancement benchmarks still need periodic completion
+   * execution, but benchmark task runs still need periodic completion
    * checks because there may be long stretches without chat traffic.
    */
   async update(delta) {
     await this.bot.modes.update();
-    if (this.task?.data?.type === 'advancement') {
+    if (BENCHMARK_TASK_TYPES.has(this.task?.data?.type)) {
       await this.checkTaskDone();
     }
   }
@@ -134,7 +135,7 @@ export class AchievementAgent extends Agent {
   }
 
   killAll() {
-    if (this._benchmark_advancement_mode) {
+    if (this._benchmark_task_mode) {
       if (this._benchmark_shutdown_requested) {
         return;
       }
@@ -161,7 +162,7 @@ export class AchievementAgent extends Agent {
   _launch_spl(objective, graph = null) {
     structured_loop(this._spl_models, this, objective, graph)
         .then(async () => {
-          if (this._benchmark_advancement_mode) {
+          if (this._benchmark_task_mode) {
             const task_completed = await this.checkTaskDone();
             if (!task_completed && !this._benchmark_shutdown_requested) {
               console.log(
@@ -176,7 +177,7 @@ export class AchievementAgent extends Agent {
         })
         .catch(err => {
           console.error('[SPL] Structured loop crashed:', err);
-          if (this._benchmark_advancement_mode) {
+          if (this._benchmark_task_mode) {
             console.error(
                 '[SPL] Benchmark objective crashed; waiting for task ' +
                 'timeout or external shutdown.');

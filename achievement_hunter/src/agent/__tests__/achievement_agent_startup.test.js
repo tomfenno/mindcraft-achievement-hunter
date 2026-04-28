@@ -101,6 +101,22 @@ describe('AchievementAgent startup behavior', () => {
         'Achievement Hunter ready! Send me an objective to begin.');
   });
 
+  it('auto-starts SPL from the attached benchmark inventory goal', async () => {
+    vi.mocked(loadCheckpoint).mockReturnValue(null);
+    const agent = makeAgent({
+      type: 'inventory',
+      goal: 'Acquire a diamond. Have a diamond in the inventory.',
+    });
+
+    await agent._setupEventHandlers(null, null);
+
+    expect(agent._waiting_for_objective).toBe(false);
+    expect(agent._launch_spl).toHaveBeenCalledWith(
+        'Acquire a diamond. Have a diamond in the inventory.');
+    expect(agent.openChat).not.toHaveBeenCalledWith(
+        'Achievement Hunter ready! Send me an objective to begin.');
+  });
+
   it('stays in manual ready mode when no task is attached and accepts chat objectives', async () => {
     vi.mocked(loadCheckpoint).mockReturnValue(null);
     const agent = makeAgent();
@@ -121,14 +137,14 @@ describe('AchievementAgent startup behavior', () => {
 describe('AchievementAgent benchmark and manual completion behavior', () => {
   it('requests benchmark shutdown instead of reopening manual objective mode', async () => {
     const agent = makeAgent({
-      type: 'advancement',
-      goal: 'Starting from a fresh survival world, obtain the Stone Age advancement.',
+      type: 'inventory',
+      goal: 'Acquire a diamond. Have a diamond in the inventory.',
     }, {stubLaunch: false});
-    agent._benchmark_advancement_mode = true;
+    agent._benchmark_task_mode = true;
     agent.checkTaskDone = vi.fn(async () => true);
 
     agent._launch_spl(
-        'Starting from a fresh survival world, obtain the Stone Age advancement.');
+        'Acquire a diamond. Have a diamond in the inventory.');
     await flushPromises();
 
     expect(vi.mocked(structured_loop)).toHaveBeenCalled();
@@ -152,10 +168,10 @@ describe('AchievementAgent benchmark and manual completion behavior', () => {
 
   it('marks benchmark disconnects as handled before delegating shutdown', () => {
     const agent = makeAgent({
-      type: 'advancement',
-      goal: 'Obtain the Stone Age advancement.',
+      type: 'inventory',
+      goal: 'Acquire a diamond. Have a diamond in the inventory.',
     });
-    agent._benchmark_advancement_mode = true;
+    agent._benchmark_task_mode = true;
     agent._disconnectHandled = false;
 
     agent.killAll();

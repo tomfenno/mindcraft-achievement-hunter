@@ -309,6 +309,13 @@ def write_results_jsonl(results_path, manifests):
         for manifest in manifests:
             file.write(json.dumps(manifest, sort_keys=True) + "\n")
 
+def serialize_metadata_value(value):
+    if value is None:
+        return ""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, sort_keys=True)
+    return str(value)
+
 def write_summary_reports(suite_root, manifests):
     per_task_rows = {}
     summary_rows = {}
@@ -316,13 +323,22 @@ def write_summary_reports(suite_root, manifests):
     for manifest in manifests:
         score = manifest.get("score", 0) or 0
         success = 1 if score >= 1 else 0
+        task_type = manifest.get("task_type", "")
+        advancement_id = manifest.get("advancement_id")
+        target = manifest.get("target")
+        target_any_of = manifest.get("target_any_of")
+        serialized_target = serialize_metadata_value(target)
+        serialized_target_any_of = serialize_metadata_value(target_any_of)
 
         per_task_key = (
             manifest["agent_label"],
             manifest["agent_name"],
             manifest["mode"],
             manifest["task_id"],
-            manifest["advancement_id"],
+            task_type,
+            serialize_metadata_value(advancement_id),
+            serialized_target,
+            serialized_target_any_of,
         )
         if per_task_key not in per_task_rows:
             per_task_rows[per_task_key] = {
@@ -330,7 +346,10 @@ def write_summary_reports(suite_root, manifests):
                 "agent_name": manifest["agent_name"],
                 "mode": manifest["mode"],
                 "task_id": manifest["task_id"],
-                "advancement_id": manifest["advancement_id"],
+                "task_type": task_type,
+                "advancement_id": serialize_metadata_value(advancement_id),
+                "target": serialized_target,
+                "target_any_of": serialized_target_any_of,
                 "runs": 0,
                 "successful_runs": 0,
             }
@@ -360,7 +379,10 @@ def write_summary_reports(suite_root, manifests):
             "agent_name",
             "mode",
             "task_id",
+            "task_type",
             "advancement_id",
+            "target",
+            "target_any_of",
             "runs",
             "successful_runs",
             "success_rate",
@@ -604,6 +626,14 @@ def inspect_advancement_completion(server_root, world_path, agent_name, advancem
 
     return 1 if advancement_data.get(advancement_id, {}).get("done") is True else 0
 
+def build_benchmark_task_metadata(task_data):
+    return {
+        "task_type": task_data.get("type"),
+        "advancement_id": task_data.get("advancement_id"),
+        "target": task_data.get("target"),
+        "target_any_of": task_data.get("target_any_of"),
+    }
+
 def extract_result_recursive(folder_path):
     curr_score = None
     for json_file in glob.glob(os.path.join(folder_path, "**", "*.json"), recursive=True):
@@ -640,6 +670,21 @@ def prepare_benchmark_server(server_root, world_config, seed, server_port):
         "server-port": server_port,
     }
     update_properties_file(os.path.join(server_root, "server.properties"), overrides)
+
+def resolve_benchmark_score(result_dir, server_root, world_path, agent_name, task_data):
+    score = extract_result_recursive(result_dir)
+    if score is not None:
+        return score
+
+    if task_data.get("type") == "advancement":
+        return inspect_advancement_completion(
+            server_root,
+            world_path,
+            agent_name,
+            task_data["advancement_id"],
+        )
+
+    return 0
 
 def build_episode_settings(agent_config):
     settings_override = dict(agent_config.get("settings_override", {}))
@@ -762,17 +807,16 @@ def run_single_benchmark_episode(suite_root, task_path, task_id, task_data, agen
         copy_server_artifacts(server_root, result_dir)
         copy_agent_artifacts(agent_name, result_dir, episode_start_time)
 
-        score = extract_result_recursive(result_dir)
-        if score is None:
-            score = inspect_advancement_completion(
-                server_root,
-                world_path,
-                agent_name,
-                task_data["advancement_id"],
-            )
+        score = resolve_benchmark_score(
+            result_dir,
+            server_root,
+            world_path,
+            agent_name,
+            task_data,
+        )
+        task_metadata = build_benchmark_task_metadata(task_data)
 
         manifest = {
-            "advancement_id": task_data["advancement_id"],
             "agent_label": agent_label,
             "agent_name": agent_name,
             "end_time": end_dt.isoformat(),
@@ -787,6 +831,7 @@ def run_single_benchmark_episode(suite_root, task_path, task_id, task_data, agen
             "task_id": task_id,
             "task_path": task_path,
         }
+        manifest.update(task_metadata)
         with open(os.path.join(result_dir, "episode_manifest.json"), "w", encoding="utf-8") as file:
             json.dump(manifest, file, indent=2)
 
@@ -803,12 +848,21 @@ def validate_benchmark_suite(config, task_data):
         raise ValueError("benchmark_config must include a non-empty world.seeds list")
 
     for task_id, task_definition in task_data.items():
-        if task_definition.get("type") != "advancement":
-            raise ValueError(f"Benchmark task {task_id} must have type=advancement")
+        task_type = task_definition.get("type")
+        if task_type not in {"advancement", "inventory"}:
+            raise ValueError(
+                f"Benchmark task {task_id} must have type=advancement or type=inventory")
         if task_definition.get("agent_count") != 1:
             raise ValueError(f"Benchmark task {task_id} must have agent_count=1")
-        if "advancement_id" not in task_definition:
+        if task_type == "advancement" and "advancement_id" not in task_definition:
             raise ValueError(f"Benchmark task {task_id} is missing advancement_id")
+        if task_type == "inventory":
+            if "target" not in task_definition and "target_any_of" not in task_definition:
+                raise ValueError(
+                    f"Benchmark task {task_id} must include target or target_any_of")
+            if "target_any_of" in task_definition and not task_definition["target_any_of"]:
+                raise ValueError(
+                    f"Benchmark task {task_id} must provide a non-empty target_any_of list")
 
 def run_benchmark_suite(config_path):
     config_path = resolve_project_path(config_path)
@@ -1347,7 +1401,7 @@ def main():
     parser.add_argument('--block_conversation', action='store_true', help='Block conversation actions')
     parser.add_argument('--check', metavar='FOLDER_PATH', help='Check and evaluate results in the specified folder without running experiments')
     parser.add_argument('--usernames', default="", help='Comma-separated list of usernames for the agents')
-    parser.add_argument('--benchmark_config', help='Run the cross-platform vanilla advancement benchmark suite defined in the given config JSON')
+    parser.add_argument('--benchmark_config', help='Run the cross-platform single-agent benchmark suite defined in the given config JSON')
 
     args = parser.parse_args()
     print(args)

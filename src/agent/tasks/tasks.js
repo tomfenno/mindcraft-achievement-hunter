@@ -1,236 +1,12 @@
-import { readFileSync , writeFileSync, existsSync} from 'fs';
 import { executeCommand } from '../commands/index.js';
 import { getPosition } from '../library/world.js';
 import { ConstructionTaskValidator, Blueprint } from './construction_tasks.js';
 import { CookingTaskInitiator } from './cooking_tasks.js';
 import { AdvancementTaskValidator } from './advancement_tasks.js';
-
-const PROGRESS_FILE = './hells_kitchen_progress.json';
-
-const hellsKitchenProgressManager = {
-  readProgress: function() {
-    try {
-      if (existsSync(PROGRESS_FILE)) {
-        const data = readFileSync(PROGRESS_FILE, 'utf8');
-        return JSON.parse(data);
-      }
-    } catch (err) {
-      console.error('Error reading progress file:', err);
-    }
-    return { taskId: null, agent0Complete: false, agent1Complete: false };
-  },
-  
-  writeProgress: function(progress) {
-    try {
-      writeFileSync(PROGRESS_FILE, JSON.stringify(progress), 'utf8');
-    } catch (err) {
-      console.error('Error writing progress file:', err);
-    }
-  },
-  
-  resetTask: function(taskId) {
-    const progress = { taskId, agent0Complete: false, agent1Complete: false };
-    this.writeProgress(progress);
-    return progress;
-  },
-  
-  updateAgentProgress: function(taskId, agentId, isComplete) {
-    const progress = this.readProgress();
-    
-    // If it's a different task, reset first
-    if (progress.taskId !== taskId) {
-      progress.taskId = taskId;
-      progress.agent0Complete = false;
-      progress.agent1Complete = false;
-    }
-    
-    // Update the specific agent's status
-    if (agentId === 0) progress.agent0Complete = isComplete;
-    if (agentId === 1) progress.agent1Complete = isComplete;
-    
-    this.writeProgress(progress);
-    return progress;
-  },
-  
-  isTaskComplete: function(taskId) {
-    const progress = this.readProgress();
-    if (progress.taskId !== taskId) return false;
-    return progress.agent0Complete && progress.agent1Complete;
-  }
-};
-
-
-//todo: modify validator code to return an object with valid and score -> do more testing hahah
-//todo: figure out how to log these things to the same place as bots/histories
-// export class CraftTaskValidator {
-//     constructor(data, agent) {
-//         this.target = data.target;
-//         this.number_of_target = data.number_of_target;
-//         this.agent = agent;
-
-/**
- * Validates the presence of required items in an agent's inventory
- * @param {Object} data - Task data containing target and quantity information
- * @param {Object} agent - Agent object with bot inventory
- * @returns {Object} Validation result with success status and missing items
- */
-function checkItemPresence(data, agent) {
-
-    try {
-        // Special handling for hells_kitchen tasks
-        if (data.task_id && data.task_id.endsWith('hells_kitchen') && Array.isArray(data.target) && data.target.length === 2) {
-            
-            // Get agent ID and target for this agent
-            const agentId = agent.count_id;
-            
-            if (agentId === 0 || agentId === 1) {
-                // Use only the corresponding element from the target list
-                const targetForThisAgent = data.target[agentId];
-                const modifiedData = {
-                    ...data,
-                    target: targetForThisAgent
-                };
-                
-                // Check if this agent has their required item
-                const agentResult = checkItemForSingleAgent(modifiedData, agent);
-                
-                // Update the file-based progress tracker
-                const progress = hellsKitchenProgressManager.updateAgentProgress(
-                    data.task_id, 
-                    agentId, 
-                    agentResult.success
-                );
-                
-                // // Log the current state
-                // console.log(`Agent ${agentId} has item: ${agentResult.success}`);
-                // console.log(`Task state: Agent0=${progress.agent0Complete}, Agent1=${progress.agent1Complete}`);
-                
-                // Return combined result - success only if both agents have their items
-                return {
-                    success: progress.agent0Complete && progress.agent1Complete,
-                    missingItems: agentResult.missingItems,
-                    agentComplete: agentResult.success  // Individual agent status for debugging
-                };
-            }
-        }
-        
-        // Non-hells_kitchen tasks use the standard check
-        return checkItemForSingleAgent(data, agent);
-        
-    } catch (error) {
-        console.error('Error checking item presence:', error);
-        return {
-            success: false,
-            missingItems: [],
-            error: error.message
-        };
-    }
-}
-
-
-/**
- * Helper function to check a single agent's inventory
- * Extracted from the original checkItemPresence logic
- */
-function checkItemForSingleAgent(data, agent) {
-    function isTargetDictionaryWithQuantities(target) {
-        return typeof target === 'object' && 
-               !Array.isArray(target) && 
-               target !== null &&
-               Object.values(target).every(value => typeof value === 'number');
-    }
-    
-    function normalizeTargets(target) {
-        if (typeof target === 'string') {
-            return { [target]: 1 };
-        } else if (Array.isArray(target)) {
-            return target.reduce((acc, item) => {
-                acc[item] = 1;
-                return acc;
-            }, {});
-        } else if (typeof target === 'object' && target !== null) {
-            return target;
-        }
-        throw new Error('Invalid target format');
-    }
-    
-    function normalizeQuantities(targets, quantities) {
-        if (quantities === undefined) {
-            return Object.keys(targets).reduce((acc, key) => {
-                acc[key] = 1;
-                return acc;
-            }, {});
-        } else if (typeof quantities === 'number') {
-            return Object.keys(targets).reduce((acc, key) => {
-                acc[key] = quantities;
-                return acc;
-            }, {});
-        } else if (typeof quantities === 'object' && quantities !== null) {
-            return quantities;
-        }
-        throw new Error('Invalid number_of_target format');
-    }
-    
-    // First normalize targets to always have a consistent format
-    const targets = normalizeTargets(data.target);
-    
-    // Determine the required quantities
-    const requiredQuantities = isTargetDictionaryWithQuantities(data.target) 
-        ? data.target 
-        : normalizeQuantities(targets, data.number_of_target);
-
-    // Count items in inventory
-    const inventoryCount = {};
-    agent.bot.inventory.slots.forEach((slot) => {
-        if (slot) {
-            const itemName = slot.name.toLowerCase();
-            inventoryCount[itemName] = (inventoryCount[itemName] || 0) + slot.count;
-        }
-    });
-
-    // Check if all required items are present in sufficient quantities
-    const missingItems = [];
-    let allTargetsMet = true;
-
-    for (const [item, requiredCount] of Object.entries(requiredQuantities)) {
-        const itemName = item.toLowerCase();
-        const currentCount = inventoryCount[itemName] || 0;
-        if (currentCount < requiredCount) {
-            allTargetsMet = false;
-            missingItems.push({
-                item: itemName,
-                required: requiredCount,
-                current: currentCount,
-                missing: requiredCount - currentCount
-            });
-        }
-    }
-
-    return {
-        success: allTargetsMet,
-        missingItems: missingItems
-    };
-}
-
-
-
-class CookingCraftingTaskValidator {
-    constructor(data, agent) {
-        this.data = data;
-        this.agent = agent;
-    } 
-    validate() {
-        const result = checkItemPresence(this.data, this.agent);
-        let score = 0;
-        if (result.success) {
-            score = 1;
-        }
-        return {
-            "valid": result.success, 
-            "score": score,
-        };
-    }
-}
+import {
+    InventoryTaskValidator,
+    hellsKitchenProgressManager,
+} from './inventory_tasks.js';
 
 export class Task {
     constructor(agent, task_data, taskStartTime = null) {
@@ -276,8 +52,12 @@ export class Task {
 
             if (this.task_type === 'construction') {
                 this.validator = new ConstructionTaskValidator(this.data, this.agent);
-            } else if (this.task_type === 'cooking' || this.task_type === 'techtree') {
-                this.validator = new CookingCraftingTaskValidator(this.data, this.agent);
+            } else if (
+                this.task_type === 'cooking' ||
+                this.task_type === 'techtree' ||
+                this.task_type === 'inventory'
+            ) {
+                this.validator = new InventoryTaskValidator(this.data, this.agent);
             } else if (this.task_type === 'advancement') {
                 this.validator = new AdvancementTaskValidator(this.data, this.agent);
             } else {
@@ -369,7 +149,7 @@ export class Task {
         if (this.validator)
             res = this.validator.validate();
         if (res && res.valid) {
-            if (this.task_type !== 'advancement') {
+            if (this.task_type !== 'advancement' && this.task_type !== 'inventory') {
                 // Find all the agents and clear their inventories
                 for (let agent of this.available_agents) {
                     this.agent.bot.chat(`/clear ${agent}`);
@@ -410,8 +190,8 @@ export class Task {
     }
 
     async initBotTask() {
-        if (this.task_type === 'advancement') {
-            // Vanilla advancement benchmarks should start from the world's
+        if (this.task_type === 'advancement' || this.task_type === 'inventory') {
+            // Vanilla benchmark tasks should start from the world's
             // natural survival state with no task-side cheats or inventory
             // mutation.
             return;

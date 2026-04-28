@@ -123,7 +123,8 @@ export class Agent {
                 this.startEvents();
                 const useAchievementObjective =
                     settings.achievement_hunter && settings.task &&
-                    settings.task.type === 'advancement';
+                    (settings.task.type === 'advancement' ||
+                     settings.task.type === 'inventory');
               
                 if (!load_mem) {
                     if (settings.task) {
