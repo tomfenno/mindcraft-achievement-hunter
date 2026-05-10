@@ -30,6 +30,8 @@ server_data*
 src/mindcraft-py/__pycache__/
 
 # Manually added after fork
+.claude/
+CLAUDE.md
 .env
 .env.*
 venv/
